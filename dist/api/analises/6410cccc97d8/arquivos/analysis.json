@@ -1,0 +1,429 @@
+{
+  "id": "6410cccc97d8",
+  "name": "Marrocos 2023 – Talat N'Yaaqoub (EMSR695, AOI 07) – controle 2021",
+  "bbox": [
+    -8.23161,
+    30.94331,
+    -8.14178,
+    31.02051
+  ],
+  "before_start": "2021-09-03",
+  "before_end": "2021-09-03",
+  "after_start": "2021-09-18",
+  "after_end": "2021-09-18",
+  "max_cloud": 80,
+  "threshold_method": "kstd",
+  "k": 2.0,
+  "min_region_px": 6,
+  "median_composite": false,
+  "topo_correction": true,
+  "event_id": null,
+  "control_id": null,
+  "control_of": "47412403ace4",
+  "preferred_tile": "29RNQ",
+  "control_ids": [],
+  "control_year": 2021,
+  "pair_window": {
+    "start": "2021-08-04",
+    "end": "2021-10-13",
+    "target_gap_days": 15,
+    "relative_orbit": 137
+  },
+  "control_excluded": null,
+  "ems_activation": null,
+  "ems_aoi": null,
+  "featured": false,
+  "status": "done",
+  "progress": 100,
+  "message": "Concluído",
+  "error": null,
+  "created_at": "2026-11-21T20:49:15+00:00",
+  "finished_at": "2026-11-21T20:50:08+00:00",
+  "result": {
+    "bounds": [
+      [
+        30.94325487332257,
+        -8.231609999999998
+      ],
+      [
+        31.020510000000012,
+        -8.141708255074862
+      ]
+    ],
+    "grid": {
+      "width": 858,
+      "height": 860,
+      "crs": "EPSG:3857",
+      "resolution_m": 10.0,
+      "ground_resolution_m": 10.0,
+      "transform": [
+        11.66412175581928,
+        0.0,
+        -916338.6336088186,
+        0.0,
+        -11.66412175581928,
+        3635413.0438611205
+      ]
+    },
+    "before": {
+      "item_id": "S2B_29RNQ_20210903_1_L2A",
+      "datetime": "2021-09-03T11:22:40.229000Z",
+      "cloud_cover": 6.3e-05,
+      "platform": "sentinel-2b",
+      "tile": "29RNQ",
+      "relative_orbit": 137,
+      "processing_baseline": "05.00",
+      "radiometry": "offset já removido pelo provedor (boa_offset_applied)",
+      "clear_fraction": 1.0,
+      "sun_azimuth": 141.7,
+      "sun_elevation": 61.11,
+      "topo": {
+        "c": {
+          "blue": {
+            "c": null,
+            "r": -0.08
+          },
+          "green": {
+            "c": null,
+            "r": -0.092
+          },
+          "red": {
+            "c": null,
+            "r": -0.002
+          },
+          "nir": {
+            "c": null,
+            "r": -0.394
+          },
+          "swir16": {
+            "c": null,
+            "r": -0.123
+          },
+          "swir22": {
+            "c": null,
+            "r": 0.02
+          }
+        }
+      },
+      "aot": 0.175,
+      "n_scenes": 1,
+      "scenes": [
+        {
+          "item_id": "S2B_29RNQ_20210903_1_L2A",
+          "datetime": "2021-09-03T11:22:40.229000Z",
+          "clear_fraction": 1.0,
+          "sun_azimuth": 141.7,
+          "sun_elevation": 61.11,
+          "topo": {
+            "c": {
+              "blue": {
+                "c": null,
+                "r": -0.08
+              },
+              "green": {
+                "c": null,
+                "r": -0.092
+              },
+              "red": {
+                "c": null,
+                "r": -0.002
+              },
+              "nir": {
+                "c": null,
+                "r": -0.394
+              },
+              "swir16": {
+                "c": null,
+                "r": -0.123
+              },
+              "swir22": {
+                "c": null,
+                "r": 0.02
+              }
+            }
+          },
+          "aot": 0.175
+        }
+      ]
+    },
+    "after": {
+      "item_id": "S2A_29RNQ_20210918_2_L2A",
+      "datetime": "2021-09-18T11:22:45.952000Z",
+      "cloud_cover": 0.000521,
+      "platform": "sentinel-2a",
+      "tile": "29RNQ",
+      "relative_orbit": 137,
+      "processing_baseline": "05.00",
+      "radiometry": "offset já removido pelo provedor (boa_offset_applied)",
+      "clear_fraction": 1.0,
+      "sun_azimuth": 149.31,
+      "sun_elevation": 56.78,
+      "topo": {
+        "c": {
+          "blue": {
+            "c": null,
+            "r": -0.152
+          },
+          "green": {
+            "c": null,
+            "r": -0.133
+          },
+          "red": {
+            "c": null,
+            "r": -0.006
+          },
+          "nir": {
+            "c": null,
+            "r": -0.419
+          },
+          "swir16": {
+            "c": null,
+            "r": -0.076
+          },
+          "swir22": {
+            "c": null,
+            "r": 0.059
+          }
+        }
+      },
+      "aot": 0.048,
+      "n_scenes": 1,
+      "scenes": [
+        {
+          "item_id": "S2A_29RNQ_20210918_2_L2A",
+          "datetime": "2021-09-18T11:22:45.952000Z",
+          "clear_fraction": 1.0,
+          "sun_azimuth": 149.31,
+          "sun_elevation": 56.78,
+          "topo": {
+            "c": {
+              "blue": {
+                "c": null,
+                "r": -0.152
+              },
+              "green": {
+                "c": null,
+                "r": -0.133
+              },
+              "red": {
+                "c": null,
+                "r": -0.006
+              },
+              "nir": {
+                "c": null,
+                "r": -0.419
+              },
+              "swir16": {
+                "c": null,
+                "r": -0.076
+              },
+              "swir22": {
+                "c": null,
+                "r": 0.059
+              }
+            }
+          },
+          "aot": 0.048
+        }
+      ]
+    },
+    "same_tile": true,
+    "same_orbit": true,
+    "warnings": [],
+    "notes": [
+      "Controle 2021: par 2021-09-03 → 2021-09-18 (15 dias; alvo 15) escolhido entre 12 cenas; 100% do retângulo válido nas duas.",
+      "Correção topográfica: nenhuma banda tinha relação clara entre brilho e iluminação (r < 0,2) — o L2A já sai do Sen2Cor com correção de terreno."
+    ],
+    "topo": {
+      "requested": true,
+      "applied": true,
+      "dem": "cop-dem-glo-30",
+      "bands_corrected": 0,
+      "bands_total": 12,
+      "slope_mean_deg": 23.8
+    },
+    "worldcover": true,
+    "statistics": {
+      "valid_pixels": 737880,
+      "valid_area_km2": 73.788,
+      "total_pixels": 737880,
+      "changed_pixels": 24965,
+      "changed_area_km2": 2.4965,
+      "changed_percent": 3.383,
+      "cva_threshold": 0.0336,
+      "dndvi_mean": 0.0016,
+      "classes": [
+        {
+          "id": 0,
+          "name": "Sem mudança",
+          "color": "rgba(0,0,0,0.24)",
+          "pixels": 712915,
+          "area_km2": 71.2915,
+          "percent": 96.617
+        },
+        {
+          "id": 1,
+          "name": "Perda de vegetação (possível deslizamento)",
+          "color": "rgba(245,130,32,0.90)",
+          "pixels": 626,
+          "area_km2": 0.0626,
+          "percent": 0.085
+        },
+        {
+          "id": 2,
+          "name": "Solo exposto / entulho em área urbana (possível dano em construções)",
+          "color": "rgba(220,38,38,0.90)",
+          "pixels": 184,
+          "area_km2": 0.0184,
+          "percent": 0.025
+        },
+        {
+          "id": 3,
+          "name": "Mudança em corpos d'água",
+          "color": "rgba(37,99,235,0.90)",
+          "pixels": 0,
+          "area_km2": 0.0,
+          "percent": 0.0
+        },
+        {
+          "id": 4,
+          "name": "Outras mudanças espectrais",
+          "color": "rgba(250,204,21,0.82)",
+          "pixels": 20625,
+          "area_km2": 2.0625,
+          "percent": 2.795
+        },
+        {
+          "id": 5,
+          "name": "Solo exposto / possível deslizamento",
+          "color": "rgba(192,38,211,0.90)",
+          "pixels": 3530,
+          "area_km2": 0.353,
+          "percent": 0.478
+        }
+      ],
+      "dndvi_median": 0.0012,
+      "land_fraction_of_valid": 1.0,
+      "valid_fraction": 1.0,
+      "bright_fixed_km2": 0.0,
+      "steep": {
+        "limit_deg": 20.0,
+        "changed_percent": 66.51,
+        "area_percent": 64.46
+      },
+      "urban": {
+        "area_km2": 0.373,
+        "percent_of_valid": 0.51,
+        "changed_km2": 0.0294,
+        "changed_percent": 7.871
+      }
+    },
+    "scales": {
+      "dndvi": {
+        "min": -0.5,
+        "max": 0.5,
+        "fade": [
+          0.03,
+          0.15
+        ],
+        "label": "ΔNDVI (depois − antes)",
+        "stops": [
+          [
+            0.0,
+            "rgb(140,81,10)"
+          ],
+          [
+            0.35,
+            "rgb(223,194,125)"
+          ],
+          [
+            0.5,
+            "rgb(245,245,245)"
+          ],
+          [
+            0.65,
+            "rgb(128,205,193)"
+          ],
+          [
+            1.0,
+            "rgb(1,102,94)"
+          ]
+        ],
+        "ticks": [
+          -0.5,
+          0.0,
+          0.5
+        ],
+        "hint": "marrom = perda de vegetação · verde = ganho"
+      },
+      "magnitude": {
+        "min": 0.0168,
+        "max": 0.05858,
+        "threshold": 0.0336,
+        "label": "Magnitude CVA (Δ reflectância)",
+        "stops": [
+          [
+            0.0,
+            "rgb(13,8,135)"
+          ],
+          [
+            0.35,
+            "rgb(126,3,168)"
+          ],
+          [
+            0.65,
+            "rgb(220,57,119)"
+          ],
+          [
+            0.85,
+            "rgb(251,155,6)"
+          ],
+          [
+            1.0,
+            "rgb(240,249,33)"
+          ]
+        ],
+        "ticks": [
+          0.0168,
+          0.0336,
+          0.05858
+        ],
+        "hint": "▲ = limiar de mudança"
+      }
+    },
+    "legend": [
+      {
+        "id": 1,
+        "name": "Perda de vegetação (possível deslizamento)",
+        "color": "rgb(245,130,32)"
+      },
+      {
+        "id": 2,
+        "name": "Solo exposto / entulho em área urbana (possível dano em construções)",
+        "color": "rgb(220,38,38)"
+      },
+      {
+        "id": 3,
+        "name": "Mudança em corpos d'água",
+        "color": "rgb(37,99,235)"
+      },
+      {
+        "id": 4,
+        "name": "Outras mudanças espectrais",
+        "color": "rgb(250,204,21)"
+      },
+      {
+        "id": 5,
+        "name": "Solo exposto / possível deslizamento",
+        "color": "rgb(192,38,211)"
+      }
+    ],
+    "elapsed_s": 52.8,
+    "ndvi_stats_mask": "válidos, sem água",
+    "mean_ndvi_before": 0.2005,
+    "mean_ndvi_after": 0.2021,
+    "median_ndvi_before": 0.1659,
+    "median_ndvi_after": 0.1692,
+    "median_composite": false
+  }
+}

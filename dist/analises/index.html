@@ -1,0 +1,227 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Análises · SismoS2</title>
+  <meta name="description" content="SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do Sentinel-2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  
+  <link rel="stylesheet" href="../static/css/tokens.css">
+  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="../static/css/site.css">
+</head>
+
+<body class=" vitrine">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  
+  
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../" aria-label="SismoS2, início"><svg viewBox="0 0 34 22" aria-hidden="true"><path d="M1 11h7l2-4 3 12 3-17 3 14 2-7 2 2h10" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SismoS2</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" id="nav-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Abrir menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Principal">
+        
+        
+        <a href="../">Início</a>
+        
+        
+        
+        
+        
+        <a href="../analises/" aria-current="page">Análises</a>
+        
+        
+        
+        <a href="../eventos/">Eventos</a>
+        
+        
+        
+        <a href="../metodologia/">Metodologia</a>
+        
+        
+        
+        <a href="../sobre/">Sobre</a>
+        
+        
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    
+<div class="container page">
+  <div class="page-head">
+    <h1>Análises</h1>
+    <p>As análises em destaque, com os anos de controle dentro de cada uma.
+      As demais ficam no servidor do projeto.</p>
+  </div>
+
+  
+  <form class="toolbar" role="search" onsubmit="return false">
+    <label class="grow">Buscar pelo nome
+      <input type="search" id="f-text" placeholder="Ex.: Antakya" autocomplete="off">
+    </label>
+    
+    
+  </form>
+  <p class="muted small" id="f-count" aria-live="polite"></p>
+
+  <div class="gallery" id="gallery">
+    
+    <article class="a-card featured" data-id="47412403ace4"
+       data-name="marrocos 2023 – talat n&#39;yaaqoub (emsr695, aoi 07)" data-status="done"
+       data-val="sim">
+      
+      <div class="a-thumb">
+        
+        <img src="../analise/47412403ace4/miniatura.png" loading="lazy" alt="Mapa de prioridade de Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07)">
+        
+      </div>
+      <div class="a-body">
+        <div class="a-meta"><span class="badge done">Concluída</span><span class="badge info">Validada</span></div>
+        <h3><a class="a-link" href="../analise/47412403ace4/">Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07)</a></h3>
+        <p class="a-dates">Antes 04/08/2023 a 07/09/2023<br>
+          Depois 09/09/2023 a 13/10/2023</p>
+        
+        
+        
+        <div class="a-stats four">
+          <div>Células prioritárias<b>24</b></div>
+          <div>AUC<b>0,71</b></div>
+          <div>Área<b>74 km²</b></div>
+          <div>Controles<b>3</b></div>
+        </div>
+        
+        
+      </div>
+    </article>
+    
+    <article class="a-card featured" data-id="9ea9d74fe815"
+       data-name="antakya 2023 – com correção topográfica" data-status="done"
+       data-val="sim">
+      
+      <div class="a-thumb">
+        
+        <img src="../analise/9ea9d74fe815/miniatura.png" loading="lazy" alt="Mapa de prioridade de Antakya 2023 – com correção topográfica">
+        
+      </div>
+      <div class="a-body">
+        <div class="a-meta"><span class="badge done">Concluída</span><span class="badge info">Validada</span></div>
+        <h3><a class="a-link" href="../analise/9ea9d74fe815/">Antakya 2023 – com correção topográfica</a></h3>
+        <p class="a-dates">Antes 01/01/2023 a 05/02/2023<br>
+          Depois 07/02/2023 a 15/03/2023</p>
+        
+        
+        
+        <div class="a-stats four">
+          <div>Células prioritárias<b>108</b></div>
+          <div>AUC<b>0,83</b></div>
+          <div>Área<b>56 km²</b></div>
+          <div>Controles<b>3</b></div>
+        </div>
+        
+        
+      </div>
+    </article>
+    
+  </div>
+  <div id="f-empty" hidden>
+    <div class="empty">
+  <h3>Nenhuma análise com esses filtros</h3>
+  <p>Limpe a busca.</p>
+  
+</div>
+  </div>
+  
+</div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <h2>SismoS2</h2>
+        <p>Detecção de mudanças após terremotos com imagens Sentinel-2. Trabalho acadêmico; os mapas indicam onde olhar
+          primeiro e não substituem a vistoria em campo.</p>
+      </div>
+      <div>
+        <h2>Fontes de dados</h2>
+        <ul>
+          <li><a href="https://earth-search.aws.element84.com/v1" rel="noopener">Sentinel-2 L2A (Earth Search, Element84/AWS)</a></li>
+          <li><a href="https://rapidmapping.emergency.copernicus.eu/" rel="noopener">Copernicus EMS Rapid Mapping</a></li>
+          <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="noopener">USGS Earthquake Hazards</a></li>
+          <li><a href="https://esa-worldcover.org/" rel="noopener">ESA WorldCover 2021</a></li>
+          <li><a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap e HOT</a></li>
+          <li><a href="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model" rel="noopener">Copernicus DEM GLO-30</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>window.SISMOS2_STATIC = { base: "../" };</script>
+  <script src="../static/js/common.js"></script>
+  <script>
+    (function () {   // menu do celular
+      const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
+      t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
+    })();
+  </script>
+  
+<script>
+  (function () {   // filtros da galeria (no navegador; a lista é pequena)
+    const $ = (id) => document.getElementById(id);
+    if (!$("gallery")) return;
+    const cards = [...document.querySelectorAll("#gallery .a-card")];
+    function apply() {
+      const q = $("f-text").value.trim().toLowerCase();
+      const st = $("f-status") ? $("f-status").value : "", val = $("f-val") ? $("f-val").value : "";   // a vitrine só tem a busca
+      let n = 0;
+      cards.forEach((c) => {
+        const show = (!q || c.dataset.name.includes(q)) && (!st || c.dataset.status === st) && (!val || c.dataset.val === val);
+        c.hidden = !show;
+        n += show;
+      });
+      $("f-count").textContent = `${n} de ${cards.length} análises`;
+      $("f-empty").hidden = n > 0;
+    }
+    ["f-text", "f-status", "f-val"].forEach((k) => $(k) && $(k).addEventListener("input", apply));
+    apply();
+
+    // estrela "Destacar": grava no servidor e leva o card para o topo
+    const gallery = $("gallery");
+    gallery.addEventListener("click", async (e) => {   // (na vitrine não há estrelas: o clique não acha .star)
+      const btn = e.target.closest(".star");
+      if (!btn) return;
+      const card = btn.closest(".a-card"), on = btn.getAttribute("aria-pressed") !== "true";
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/analises/${card.dataset.id}/destaque`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ featured: on }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        btn.setAttribute("aria-pressed", String(on));
+        btn.title = on ? "Tirar o destaque" : "Destacar: fixa no topo da galeria";
+        card.classList.toggle("featured", on);
+        const featured = [...gallery.querySelectorAll(".a-card.featured")];
+        if (on) gallery.prepend(card);
+        else if (featured.length) featured[featured.length - 1].after(card);
+      } catch (err) {
+        alert(err.message || "Não foi possível destacar agora.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

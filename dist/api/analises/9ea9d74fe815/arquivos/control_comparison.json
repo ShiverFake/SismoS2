@@ -1,0 +1,198 @@
+{
+ "common_threshold": 0.12427,
+ "common_valid_km2": 38.593,
+ "urban_common_km2": 17.079,
+ "event": {
+  "label": "Evento",
+  "threshold": 0.15314,
+  "own_total_percent": 1.873,
+  "common_total_percent": 2.953,
+  "own_urban_percent": 2.131,
+  "common_urban_percent": 3.498,
+  "urban_magnitude": {
+   "mean": 0.04684,
+   "median": 0.03361,
+   "p90": 0.08324,
+   "p95": 0.11569
+  },
+  "dates": [
+   "2023-01-25",
+   "2023-02-09"
+  ],
+  "gap_days": 15,
+  "id": "9ea9d74fe815",
+  "year": null
+ },
+ "controls": [
+  {
+   "label": "Controle 2019",
+   "threshold": 0.10315,
+   "own_total_percent": 1.198,
+   "common_total_percent": 0.854,
+   "own_urban_percent": 0.786,
+   "common_urban_percent": 0.589,
+   "urban_magnitude": {
+    "mean": 0.02904,
+    "median": 0.02338,
+    "p90": 0.04564,
+    "p95": 0.05731
+   },
+   "dates": [
+    "2019-02-05",
+    "2019-02-25"
+   ],
+   "gap_days": 20,
+   "id": "ad81a124c915",
+   "year": 2019,
+   "event_at_this_threshold_total_percent": 4.385,
+   "event_at_this_threshold_urban_percent": 5.208
+  },
+  {
+   "label": "Controle 2020",
+   "threshold": 0.14403,
+   "own_total_percent": 1.794,
+   "common_total_percent": 2.251,
+   "own_urban_percent": 1.172,
+   "common_urban_percent": 1.52,
+   "urban_magnitude": {
+    "mean": 0.03372,
+    "median": 0.02331,
+    "p90": 0.05733,
+    "p95": 0.07796
+   },
+   "dates": [
+    "2020-01-11",
+    "2020-01-16"
+   ],
+   "gap_days": 5,
+   "id": "021edfd16e4b",
+   "year": 2020,
+   "event_at_this_threshold_total_percent": 2.138,
+   "event_at_this_threshold_urban_percent": 2.454
+  },
+  {
+   "label": "Controle 2021",
+   "threshold": 0.12562,
+   "own_total_percent": 1.148,
+   "common_total_percent": 1.174,
+   "own_urban_percent": 0.858,
+   "common_urban_percent": 0.878,
+   "urban_magnitude": {
+    "mean": 0.03623,
+    "median": 0.02913,
+    "p90": 0.05855,
+    "p95": 0.07291
+   },
+   "dates": [
+    "2021-02-09",
+    "2021-02-24"
+   ],
+   "gap_days": 15,
+   "id": "ebc0f7903dc5",
+   "year": 2021,
+   "event_at_this_threshold_total_percent": 2.888,
+   "event_at_this_threshold_urban_percent": 3.416
+  }
+ ],
+ "aggregates": {
+  "own_total_percent": {
+   "event": 1.873,
+   "controls_mean": 1.38,
+   "controls_std": 0.359,
+   "n_controls": 3,
+   "z": 1.37
+  },
+  "common_total_percent": {
+   "event": 2.953,
+   "controls_mean": 1.426,
+   "controls_std": 0.732,
+   "n_controls": 3,
+   "z": 2.09
+  },
+  "own_urban_percent": {
+   "event": 2.131,
+   "controls_mean": 0.939,
+   "controls_std": 0.205,
+   "n_controls": 3,
+   "z": 5.81
+  },
+  "common_urban_percent": {
+   "event": 3.498,
+   "controls_mean": 0.996,
+   "controls_std": 0.477,
+   "n_controls": 3,
+   "z": 5.25
+  },
+  "urban_magnitude_median": {
+   "event": 0.03361,
+   "controls_mean": 0.025,
+   "controls_std": 0.003,
+   "n_controls": 3,
+   "z": 2.5
+  },
+  "urban_magnitude_p90": {
+   "event": 0.08324,
+   "controls_mean": 0.054,
+   "controls_std": 0.007,
+   "n_controls": 3,
+   "z": 4.12
+  },
+  "urban_magnitude_p95": {
+   "event": 0.11569,
+   "controls_mean": 0.069,
+   "controls_std": 0.011,
+   "n_controls": 3,
+   "z": 4.3
+  }
+ },
+ "both_changed_km2": 0.3105,
+ "both_percent_of_event_change": 42.952,
+ "version": 4,
+ "key": [
+  [
+   "ad81a124c915",
+   "2026-11-21T23:51:09+00:00",
+   null
+  ],
+  [
+   "021edfd16e4b",
+   "2026-11-21T23:50:22+00:00",
+   null
+  ],
+  [
+   "ebc0f7903dc5",
+   "2026-11-21T23:49:32+00:00",
+   null
+  ]
+ ],
+ "event_gap_days": 15,
+ "controls_status": [
+  {
+   "id": "ad81a124c915",
+   "year": 2019,
+   "label": "Controle 2019",
+   "flags": [],
+   "noise_median": 0.02336,
+   "excluded": null
+  },
+  {
+   "id": "021edfd16e4b",
+   "year": 2020,
+   "label": "Controle 2020",
+   "flags": [],
+   "noise_median": 0.02428,
+   "excluded": null
+  },
+  {
+   "id": "ebc0f7903dc5",
+   "year": 2021,
+   "label": "Controle 2021",
+   "flags": [],
+   "noise_median": 0.03022,
+   "excluded": null
+  }
+ ],
+ "event_noise_median": 0.03402,
+ "n_included": 3,
+ "n_done": 3
+}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+{% block title %}Início{% endblock %}
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-grid{% if compare %} has-compare{% endif %}">
+    <div class="hero-text">
+      <h1 id="hero-title">Onde vistoriar primeiro depois de um terremoto</h1>
+      <p class="lead">O SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do
+        Sentinel-2: compara o antes e o depois, mede o que mudou e ordena a área em células de 200 m.</p>
+      <div class="actions">
+        {% if config.get("VITRINE") %}
+        {{ ui.button("Ver as análises", url_for("main.analyses"), "primary large", "map") }}
+        {{ ui.button("Ver eventos", url_for("events.events_page"), "large", "calendar") }}
+        {% else %}
+        {{ ui.button("Nova análise", url_for("main.new_analysis"), "primary large", "plus") }}
+        {{ ui.button("Ver eventos", url_for("events.events_page"), "large", "map") }}
+        {% endif %}
+      </div>
+    </div>
+    {% if compare %}
+    <figure class="compare-hero" aria-labelledby="cmp-cap">
+      <div class="cmp" id="cmp" style="--pos: 50%; aspect-ratio: {{ compare.width }} / {{ compare.height }}">
+        <img class="cmp-after" src="{{ compare.after }}" alt="Depois do terremoto ({{ compare.dates[1] | data_br }})" draggable="false">
+        <img class="cmp-prio" src="{{ compare.priority }}" alt="" draggable="false">
+        <img class="cmp-before" src="{{ compare.before }}" alt="Antes do terremoto ({{ compare.dates[0] | data_br }})" draggable="false">
+        <span class="cmp-tag left">Antes, {{ compare.dates[0] | data_br }}</span>
+        <span class="cmp-tag right">Depois, {{ compare.dates[1] | data_br }}</span>
+        <div class="cmp-handle" aria-hidden="true"><span></span></div>
+        <input class="cmp-range" type="range" min="0" max="100" value="50" step="1" id="cmp-range"
+               aria-label="Divisória entre antes e depois: arraste ou use as setas">
+      </div>
+      <figcaption id="cmp-cap">
+        <span><b>{{ compare.place }}</b>. Arraste a divisória: à direita, as células de 200 m que mais mudaram.</span>
+        <span class="cmp-key">{% for label, color in compare.bands %}<span><i style="background: {{ color }}"></i>{{ label }}</span>{% endfor %}</span>
+        <a href="{{ url_for('main.analysis_page', analysis_id=compare.id) }}">Abrir a análise</a>
+      </figcaption>
+    </figure>
+    {% endif %}
+  </div>
+  <div class="seismo-wrap">
+    <svg class="seismogram" viewBox="0 0 1200 180" preserveAspectRatio="none" role="img"
+         aria-label="Traço de sismograma: ruído de fundo, chegada da onda P e o pico do terremoto">
+      <line class="baseline" x1="0" y1="90" x2="1200" y2="90"/>
+      <path class="trace" pathLength="1" d="{{ seismogram }}"/>
+    </svg>
+    <span class="seismo-label left">antes</span>
+    <span class="seismo-label right">depois</span>
+  </div>
+</section>
+
+<div class="container">
+  <section class="section" aria-labelledby="como">
+    <h2 id="como">Como funciona</h2>
+    <p class="lead">Quatro etapas, do retângulo no mapa até a lista de quarteirões para vistoriar.</p>
+    <ol class="steps">
+      <li class="step">{{ ui.icon("area") }}<div class="n">1</div><h3>Escolher a área</h3>
+        <p>Desenhe um retângulo de até {{ config.MAX_BBOX_DEG }}° sobre a cidade ou parta de um evento do USGS ou do Copernicus.</p></li>
+      <li class="step">{{ ui.icon("satellite") }}<div class="n">2</div><h3>Buscar imagens antes e depois</h3>
+        <p>O sistema escolhe as cenas do Sentinel-2 com menos nuvem e névoa no retângulo, no mesmo tile e órbita.</p></li>
+      <li class="step">{{ ui.icon("diff") }}<div class="n">3</div><h3>Detectar mudanças</h3>
+        <p>Change Vector Analysis em seis bandas, com correção de relevo e classificação por índices espectrais.</p></li>
+      <li class="step">{{ ui.icon("priority") }}<div class="n">4</div><h3>Mapa de prioridade de vistoria</h3>
+        <p>As células de 200 m são ordenadas pela % de mudança: as 10% do topo indicam onde começar.</p></li>
+    </ol>
+  </section>
+
+  <section class="section" aria-labelledby="casos">
+    <h2 id="casos">Estudos de caso</h2>
+    <p class="lead">Cada caso foi validado contra mapas de dano e comparado com anos sem terremoto no mesmo lugar.
+      A AUC mede o quanto a % de mudança separa as células danificadas das demais (0,5 = acaso).</p>
+    {% if cases %}
+    <div class="cases">
+      {% for c in cases %}
+      <a class="case" href="{{ url_for('main.analysis_page', analysis_id=c.id) }}">
+        <div class="case-thumb"><img src="{{ url_for('main.thumbnail', analysis_id=c.id) }}" loading="lazy"
+             alt="Mapa de prioridade de vistoria de {{ c.name }}: células em vermelho, laranja e amarelo são as 30% com mais mudança"></div>
+        <div class="case-body">
+          <div>
+            <h3>{{ c.where or c.name }}</h3>
+            <p class="where">{% if c.magnitude %}Magnitude {{ c.magnitude | br(1) }}, {% endif %}imagens de {{ c.dates[0] | data_br }} e {{ c.dates[1] | data_br }}</p>
+          </div>
+          <div class="auc-compare" aria-label="AUC do evento comparada à média dos anos de controle">
+            <span>Evento</span>
+            <span class="bar"><span style="width: {{ (c.auc_event * 100) | round(1) }}%; background: var(--red)"></span></span>
+            <b>{{ c.auc_event | br }}</b>
+            <span>{{ c.n_controls }} anos de controle</span>
+            <span class="bar"><span style="width: {{ (c.auc_controls * 100) | round(1) }}%; background: var(--ink-faint)"></span></span>
+            <b>{{ c.auc_controls | br }}</b>
+          </div>
+          <p class="case-verdict">
+            {% if c.p_value is not none and c.p_value < 0.05 %}Diferença significativa (DeLong p = {{ c.p_value | br(3) }}).
+            {% else %}Diferença não significativa (p = {{ (c.p_value or 1) | br(3) }}).{% endif %}
+            Visitando 10% das células, alcançam-se {{ (c.triage10 * 100) | round | int }}% dos prédios com dano. Referência: {{ c.reference }}.</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+      {% if config.get("VITRINE") %}
+      {{ ui.empty("Nenhum estudo de caso validado ainda",
+                  "Os estudos de caso aparecem aqui quando uma análise destacada tem validação e anos de controle.") }}
+      {% else %}
+      {{ ui.empty("Nenhum estudo de caso validado ainda",
+                  "Rode uma análise, os controles de anos anteriores e a validação com dados oficiais: o resultado aparece aqui.",
+                  "Começar uma análise", url_for("main.new_analysis")) }}
+      {% endif %}
+    {% endif %}
+  </section>
+
+  <section class="section" aria-labelledby="fontes">
+    <h2 id="fontes">Dados abertos usados</h2>
+    <p class="lead">Tudo vem de fontes públicas, sem chave de acesso.</p>
+    <div class="sources">
+      <div><b>Sentinel-2 L2A</b><span>Imagens de 10 m, via Earth Search</span></div>
+      <div><b>Copernicus EMS</b><span>Mapas oficiais de dano</span></div>
+      <div><b>USGS</b><span>Terremotos em tempo real</span></div>
+      <div><b>ESA WorldCover</b><span>Área construída</span></div>
+      <div><b>OpenStreetMap</b><span>Contorno dos prédios</span></div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {   // comparador antes/depois: arrastar a divisória (mouse, toque) ou setas do teclado
+    const box = document.getElementById("cmp");
+    if (!box) return;
+    const range = document.getElementById("cmp-range");
+    const set = (v) => { v = Math.max(0, Math.min(100, v)); box.style.setProperty("--pos", v + "%"); range.value = Math.round(v); };
+    const fromEvent = (e) => { const r = box.getBoundingClientRect(); return 100 * (e.clientX - r.left) / r.width; };
+    let dragging = false;
+    box.addEventListener("pointerdown", (e) => { dragging = true; box.setPointerCapture(e.pointerId); set(fromEvent(e)); range.focus({ preventScroll: true }); });
+    box.addEventListener("pointermove", (e) => { if (dragging) set(fromEvent(e)); });
+    ["pointerup", "pointercancel"].forEach((t) => box.addEventListener(t, () => { dragging = false; }));
+    range.addEventListener("input", () => set(Number(range.value)));
+  })();
+</script>
+{% endblock %}

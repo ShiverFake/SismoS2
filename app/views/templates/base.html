@@ -1,0 +1,82 @@
+{% import "components/ui.html" as ui %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}SismoS2{% endblock %} · SismoS2</title>
+  <meta name="description" content="SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do Sentinel-2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  {% block head %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+</head>
+{% set vitrine = config.get("VITRINE") %}
+<body class="{% block body_class %}{% endblock %}{% if vitrine %} vitrine{% endif %}">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  {% set nav_items = [
+    ("inicio", "main.index", "Início"),
+    ("nova", "main.new_analysis", "Nova análise"),
+    ("analises", "main.analyses", "Análises"),
+    ("eventos", "events.events_page", "Eventos"),
+    ("metodologia", "main.methodology", "Metodologia"),
+    ("sobre", "main.about", "Sobre"),
+  ] %}
+  {% set active = active_page | default('') %}
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="{{ url_for('main.index') }}" aria-label="SismoS2, início">{{ ui.logo_mark() }}SismoS2</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" id="nav-toggle">
+        {{ ui.icon("menu") }}<span class="visually-hidden">Abrir menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Principal">
+        {% for key, endpoint, label in nav_items %}
+        {% if not (vitrine and key == "nova") %}
+        <a href="{{ url_for(endpoint) }}"{% if key == active %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <h2>SismoS2</h2>
+        <p>Detecção de mudanças após terremotos com imagens Sentinel-2. Trabalho acadêmico; os mapas indicam onde olhar
+          primeiro e não substituem a vistoria em campo.</p>
+      </div>
+      <div>
+        <h2>Fontes de dados</h2>
+        <ul>
+          <li><a href="https://earth-search.aws.element84.com/v1" rel="noopener">Sentinel-2 L2A (Earth Search, Element84/AWS)</a></li>
+          <li><a href="https://rapidmapping.emergency.copernicus.eu/" rel="noopener">Copernicus EMS Rapid Mapping</a></li>
+          <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="noopener">USGS Earthquake Hazards</a></li>
+          <li><a href="https://esa-worldcover.org/" rel="noopener">ESA WorldCover 2021</a></li>
+          <li><a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap e HOT</a></li>
+          <li><a href="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model" rel="noopener">Copernicus DEM GLO-30</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  {% if vitrine %}<script>window.SISMOS2_STATIC = { base: "__SISMOS2_BASE__" };</script>{% endif %}
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  <script>
+    (function () {   // menu do celular
+      const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
+      t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

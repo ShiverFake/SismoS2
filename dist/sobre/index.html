@@ -1,0 +1,157 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sobre · SismoS2</title>
+  <meta name="description" content="SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do Sentinel-2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  
+  <link rel="stylesheet" href="../static/css/tokens.css">
+  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="../static/css/site.css">
+</head>
+
+<body class=" vitrine">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  
+  
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../" aria-label="SismoS2, início"><svg viewBox="0 0 34 22" aria-hidden="true"><path d="M1 11h7l2-4 3 12 3-17 3 14 2-7 2 2h10" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SismoS2</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" id="nav-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Abrir menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Principal">
+        
+        
+        <a href="../">Início</a>
+        
+        
+        
+        
+        
+        <a href="../analises/">Análises</a>
+        
+        
+        
+        <a href="../eventos/">Eventos</a>
+        
+        
+        
+        <a href="../metodologia/">Metodologia</a>
+        
+        
+        
+        <a href="../sobre/" aria-current="page">Sobre</a>
+        
+        
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    
+<div class="container page about">
+  <div class="page-head">
+    <h1>Sobre o SismoS2</h1>
+    <p>Um sistema para apontar, nas primeiras semanas depois de um terremoto, quais quarteirões precisam de vistoria
+      primeiro, usando só imagens de satélite gratuitas.</p>
+  </div>
+
+  <div class="about-grid">
+    <section class="card">
+      <h2>O projeto</h2>
+      <p>Depois de um terremoto forte, as equipes de resgate e de vistoria não conseguem olhar a cidade inteira de uma
+        vez. Mapas de dano feitos por fotointérpretes, como os do Copernicus EMS, levam dias e só existem para
+        alguns eventos. O SismoS2 compara imagens Sentinel-2 de antes e depois, mede o quanto cada pedaço de 10 m mudou
+        e ordena a cidade em células de 200 m, da que mais mudou para a que menos mudou.</p>
+      <p>O resultado não diz se um prédio caiu. Ele diz onde olhar primeiro: nos estudos de caso, visitar 10% das células
+        do topo do ranking alcançou de três a quatro vezes mais prédios danificados do que visitar 10% ao acaso.</p>
+    </section>
+
+    <section class="card">
+      <h2>Objetivo</h2>
+      <ul class="plain-list">
+        <li>Detectar mudanças entre duas datas com imagens ópticas gratuitas de 10 m.</li>
+        <li>Reduzir as falsas mudanças: nuvem, névoa, relevo, estação do ano e diferença de órbita.</li>
+        <li>Transformar a mudança num mapa de prioridade de vistoria.</li>
+        <li>Medir se o ranking funciona, contra mapas de dano oficiais e contra anos sem terremoto.</li>
+      </ul>
+    </section>
+
+    <section class="card wide">
+      <h2>Tecnologias</h2>
+      <div class="tech">
+        <div><h3>Servidor</h3><p>Python 3, Flask (padrão MVC), Jinja2</p></div>
+        <div><h3>Processamento</h3><p>NumPy, SciPy, Rasterio, GDAL, pystac-client, Shapely, Matplotlib</p></div>
+        <div><h3>Interface</h3><p>HTML, CSS próprio, JavaScript puro, Leaflet e Leaflet.draw</p></div>
+        <div><h3>Testes</h3><p>pytest; prints das páginas com Playwright (Chromium)</p></div>
+        <div><h3>Dados</h3><p>Sentinel-2 L2A, Copernicus DEM, ESA WorldCover, Copernicus EMS, USGS, OpenStreetMap</p></div>
+        <div><h3>Ambiente</h3><p>Máquina virtual Ubuntu, acesso pelo navegador</p></div>
+      </div>
+    </section>
+
+    <section class="card wide">
+      <h2>Contexto acadêmico</h2>
+      <dl class="review fill">
+        <dt>Autor</dt><dd><span class="fill-in">[seu nome]</span></dd>
+        <dt>Curso</dt><dd><span class="fill-in">[nome do curso]</span></dd>
+        <dt>Disciplina</dt><dd><span class="fill-in">[nome da disciplina]</span></dd>
+        <dt>Instituição</dt><dd><span class="fill-in">[nome da instituição]</span></dd>
+        <dt>Orientação</dt><dd><span class="fill-in">[nome do professor]</span></dd>
+        <dt>Ano</dt><dd><span class="fill-in">[ano]</span></dd>
+      </dl>
+      <p class="hint">Para preencher, edite <code>app/views/templates/about.html</code>.</p>
+    </section>
+  </div>
+
+  <div class="about-cta">
+    
+<a class="btn" href="../metodologia/" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>Ler a metodologia</span></a>
+
+    
+  </div>
+</div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <h2>SismoS2</h2>
+        <p>Detecção de mudanças após terremotos com imagens Sentinel-2. Trabalho acadêmico; os mapas indicam onde olhar
+          primeiro e não substituem a vistoria em campo.</p>
+      </div>
+      <div>
+        <h2>Fontes de dados</h2>
+        <ul>
+          <li><a href="https://earth-search.aws.element84.com/v1" rel="noopener">Sentinel-2 L2A (Earth Search, Element84/AWS)</a></li>
+          <li><a href="https://rapidmapping.emergency.copernicus.eu/" rel="noopener">Copernicus EMS Rapid Mapping</a></li>
+          <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="noopener">USGS Earthquake Hazards</a></li>
+          <li><a href="https://esa-worldcover.org/" rel="noopener">ESA WorldCover 2021</a></li>
+          <li><a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap e HOT</a></li>
+          <li><a href="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model" rel="noopener">Copernicus DEM GLO-30</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>window.SISMOS2_STATIC = { base: "../" };</script>
+  <script src="../static/js/common.js"></script>
+  <script>
+    (function () {   // menu do celular
+      const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
+      t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
+    })();
+  </script>
+  
+</body>
+</html>

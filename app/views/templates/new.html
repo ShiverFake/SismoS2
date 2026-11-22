@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+{% block title %}Nova análise{% endblock %}
+{% block body_class %}app-mode{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
+{% endblock %}
+{% block content %}
+<form class="wizard" id="analysis-form" novalidate>
+  <div class="wizard-side">
+    <div class="wizard-progress">
+      <ol id="wizard-steps" aria-label="Etapas">
+        <li class="now" data-step="1">Área</li>
+        <li data-step="2">Datas</li>
+        <li data-step="3">Opções</li>
+        <li data-step="4">Revisar</li>
+      </ol>
+      <p class="small muted" id="step-count" aria-live="polite">Etapa 1 de 4</p>
+    </div>
+
+    {# ---------------------------------------------------------------- 1. ÁREA #}
+    <section class="wizard-step" data-step="1" aria-labelledby="h-area">
+      <h2 id="h-area">Escolha a área</h2>
+      <p class="muted">Um retângulo de até {{ max_bbox_deg | br(1) }}° de lado, em volta da cidade atingida.</p>
+
+      <div class="field">
+        <span class="field-label">Exemplos com mapa oficial de dano</span>
+        <div class="presets" id="preset-list">
+          {% for e in earthquakes %}
+          <button type="button" class="preset" data-id="{{ e.id }}">
+            <b>{{ e.name }}</b>
+            <span>M{{ e.magnitude | br(1) }}, {{ e.date | data_br }}{% if e.ems_activation %}, {{ e.ems_activation }}{% endif %}</span>
+          </button>
+          {% endfor %}
+        </div>
+        <input type="hidden" id="preset" value="">
+        <p id="preset-desc" class="hint"></p>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="city-q">Ou busque uma cidade</label>
+        <div class="search-box">
+          <input type="search" id="city-q" placeholder="Ex.: Kahramanmaraş" autocomplete="off">
+          <button type="button" class="btn" id="city-btn">{{ ui.icon("search") }}<span>Buscar</span></button>
+        </div>
+        <ul class="search-results" id="city-results" hidden></ul>
+        <p class="hint" id="city-msg"></p>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Ou desenhe no mapa</span>
+        <button type="button" class="btn block" id="draw-btn">{{ ui.icon("area") }}<span>Desenhar retângulo</span></button>
+        <p class="hint">Também dá para escolher um terremoto recente na página <a href="{{ url_for('events.events_page') }}">Eventos</a>.</p>
+      </div>
+
+      <div id="ems-link" class="alert info" hidden></div>
+      <p id="bbox-size" class="area-size" aria-live="polite"></p>
+      <details>
+        <summary>Coordenadas do retângulo</summary>
+        <div class="grid2">
+          <label class="field">Oeste<input type="number" step="0.0001" id="west"></label>
+          <label class="field">Leste<input type="number" step="0.0001" id="east"></label>
+          <label class="field">Sul<input type="number" step="0.0001" id="south"></label>
+          <label class="field">Norte<input type="number" step="0.0001" id="north"></label>
+        </div>
+      </details>
+      <input type="hidden" id="ems_activation"><input type="hidden" id="ems_aoi">
+    </section>
+
+    {# ---------------------------------------------------------------- 2. DATAS #}
+    <section class="wizard-step" data-step="2" aria-labelledby="h-datas" hidden>
+      <h2 id="h-datas">Datas das imagens</h2>
+      <p class="muted">O sistema escolhe a melhor cena de cada período: a com menos nuvem e névoa no retângulo.</p>
+      <fieldset class="date-pair">
+        <legend>Depois do terremoto</legend>
+        <div class="grid2">
+          <label class="field">De<input type="date" id="after_start" required></label>
+          <label class="field">Até<input type="date" id="after_end" required></label>
+        </div>
+      </fieldset>
+      <label class="check"><input type="checkbox" id="anniversary">
+        <span>Par de aniversário<br><span class="hint">O "antes" vira as mesmas datas do "depois", um ano antes: mesma
+          estação, menos mudança de vegetação e de sombra.</span></span></label>
+      <fieldset class="date-pair">
+        <legend>Antes do terremoto</legend>
+        <div class="grid2">
+          <label class="field">De<input type="date" id="before_start" required></label>
+          <label class="field">Até<input type="date" id="before_end" required></label>
+        </div>
+      </fieldset>
+      <div id="date-warnings" class="stack"></div>
+    </section>
+
+    {# ---------------------------------------------------------------- 3. OPÇÕES #}
+    <section class="wizard-step" data-step="3" aria-labelledby="h-opcoes" hidden>
+      <h2 id="h-opcoes">Opções</h2>
+      <p class="muted">Os padrões funcionam para a maioria das cidades.</p>
+      <label class="field">Nome da análise<input id="name" required maxlength="120" placeholder="Ex.: Antakya 2023"></label>
+      <label class="check"><input type="checkbox" id="median_composite">
+        <span>Mediana de até 3 cenas por período<br><span class="hint">Junta várias datas e ignora as nuvens. Mais lento,
+          útil quando nenhuma data isolada está limpa.</span></span></label>
+      <label class="check"><input type="checkbox" id="topo_correction" checked>
+        <span>Correção do relevo<br><span class="hint">Usa o Copernicus DEM de 30 m para reduzir a falsa mudança nas
+          encostas, onde o sol bate diferente em cada data.</span></span></label>
+      <details>
+        <summary>Parâmetros avançados</summary>
+        <label class="field">Nuvem máxima da cena (%)<input type="number" id="max_cloud" min="1" max="100" value="30"></label>
+        <label class="field">Limiar da mudança
+          <select id="threshold_method">
+            <option value="kstd">Média + k × desvio-padrão</option>
+            <option value="otsu">Otsu (automático)</option>
+          </select>
+        </label>
+        <label class="field">k (desvios-padrão)<input type="number" id="k" min="0.5" max="5" step="0.1" value="2.0"></label>
+        <label class="field">Menor mancha mantida (pixels de 10 m)<input type="number" id="min_region_px" min="1" max="500" value="6"></label>
+      </details>
+    </section>
+
+    {# ---------------------------------------------------------------- 4. REVISAR #}
+    <section class="wizard-step" data-step="4" aria-labelledby="h-revisar" hidden>
+      <h2 id="h-revisar">Revisar e processar</h2>
+      <p class="muted">O processamento leva cerca de um minuto. Você acompanha o progresso na próxima tela.</p>
+      <dl class="review" id="review"></dl>
+      <div id="form-error" class="alert error" hidden></div>
+    </section>
+
+    <div class="wizard-nav">
+      <button type="button" class="btn ghost" id="prev-btn" hidden>Voltar</button>
+      <span id="step-error" class="small" role="alert"></span>
+      <button type="button" class="btn primary" id="next-btn">Continuar</button>
+      <button type="submit" class="btn primary" id="submit-btn" hidden>{{ ui.icon("play") }}<span>Processar imagens</span></button>
+    </div>
+  </div>
+
+  <div class="wizard-map"><div id="map" class="map" aria-label="Mapa para escolher a área"></div></div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script>
+  window.EARTHQUAKES = {{ earthquakes | tojson }};
+  window.MAX_BBOX_DEG = {{ max_bbox_deg | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/new.js') }}"></script>
+{% endblock %}

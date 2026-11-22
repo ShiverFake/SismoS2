@@ -1,0 +1,153 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eventos · SismoS2</title>
+  <meta name="description" content="SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do Sentinel-2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  
+  <link rel="stylesheet" href="../static/css/tokens.css">
+  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="../static/css/site.css">
+</head>
+
+<body class="app-mode vitrine">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  
+  
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../" aria-label="SismoS2, início"><svg viewBox="0 0 34 22" aria-hidden="true"><path d="M1 11h7l2-4 3 12 3-17 3 14 2-7 2 2h10" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SismoS2</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" id="nav-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Abrir menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Principal">
+        
+        
+        <a href="../">Início</a>
+        
+        
+        
+        
+        
+        <a href="../analises/">Análises</a>
+        
+        
+        
+        <a href="../eventos/">Eventos</a>
+        
+        
+        
+        <a href="../metodologia/">Metodologia</a>
+        
+        
+        
+        <a href="../sobre/">Sobre</a>
+        
+        
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    
+<div class="events">
+  <aside class="events-side" aria-labelledby="h-eventos">
+    <h1 id="h-eventos">Eventos</h1>
+    <p class="muted small">Terremotos recentes do USGS e as áreas que o Copernicus EMS mapeou depois de cada um.
+      Escolha um item para ver no mapa. Os terremotos vêm ao vivo do USGS; a lista do
+      Copernicus EMS foi gerada junto com esta versão.</p>
+
+    <details class="card filters" open>
+      <summary>Filtros</summary>
+      <label class="field">Período
+        <select id="ev-period">
+          <option value="week">Últimos 7 dias</option>
+          <option value="month">Últimos 30 dias</option>
+          <option value="custom">Escolher datas</option>
+        </select>
+      </label>
+      <div class="grid2" id="ev-custom" hidden>
+        <label class="field">Início<input type="date" id="ev-start"></label>
+        <label class="field">Fim<input type="date" id="ev-end"></label>
+      </div>
+      <label class="field">Magnitude mínima: <b id="ev-mag-label">5.5</b>
+        <input type="range" id="ev-mag" min="4.5" max="8" step="0.1" value="5.5">
+      </label>
+      <label class="check"><input type="checkbox" id="ev-ems-all" checked>
+        <span>Todas as ativações do Copernicus EMS<br><span class="hint">Desmarque para usar o mesmo período.</span></span></label>
+      <button type="button" class="btn primary block" id="ev-apply" style="margin-top:16px">Atualizar</button>
+    </details>
+
+    <div id="ev-error" class="alert error" hidden></div>
+
+    <section class="ev-group">
+      <h2>Copernicus EMS <span class="faint small" id="ev-ems-count"></span></h2>
+      <p class="hint">Terremotos com mapa de dano feito por fotointérpretes: dá para validar o resultado.</p>
+      <ul class="ev-list" id="ev-ems-list"><li class="muted small">Carregando…</li></ul>
+      <p class="hint" id="ev-ems-note"></p>
+    </section>
+
+    <section class="ev-group">
+      <h2>USGS <span class="faint small" id="ev-usgs-count"></span></h2>
+      <p class="hint" id="ev-usgs-source"></p>
+      <ul class="ev-list" id="ev-usgs-list"><li class="muted small">Carregando…</li></ul>
+    </section>
+  </aside>
+  <div class="events-map">
+    <div id="map" class="map" aria-label="Mapa de eventos"></div>
+    <div class="map-legend card">
+      <b>Legenda</b>
+      <ul class="legend small">
+        <li><span class="swatch round" style="background:#facc15"></span>Terremoto USGS (tamanho = magnitude)</li>
+        <li><span class="swatch" style="background:rgba(124,58,237,.35);border:2px solid #7c3aed"></span>Área do EMS com mapa de dano</li>
+        <li><span class="swatch" style="background:rgba(100,116,139,.35);border:2px solid #64748b"></span>Área do EMS sem mapa de dano</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <h2>SismoS2</h2>
+        <p>Detecção de mudanças após terremotos com imagens Sentinel-2. Trabalho acadêmico; os mapas indicam onde olhar
+          primeiro e não substituem a vistoria em campo.</p>
+      </div>
+      <div>
+        <h2>Fontes de dados</h2>
+        <ul>
+          <li><a href="https://earth-search.aws.element84.com/v1" rel="noopener">Sentinel-2 L2A (Earth Search, Element84/AWS)</a></li>
+          <li><a href="https://rapidmapping.emergency.copernicus.eu/" rel="noopener">Copernicus EMS Rapid Mapping</a></li>
+          <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="noopener">USGS Earthquake Hazards</a></li>
+          <li><a href="https://esa-worldcover.org/" rel="noopener">ESA WorldCover 2021</a></li>
+          <li><a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap e HOT</a></li>
+          <li><a href="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model" rel="noopener">Copernicus DEM GLO-30</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>window.SISMOS2_STATIC = { base: "../" };</script>
+  <script src="../static/js/common.js"></script>
+  <script>
+    (function () {   // menu do celular
+      const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
+      t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
+    })();
+  </script>
+  
+<script>window.MAX_BBOX_DEG = 0.3;</script>
+<script src="../static/js/events.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+{
+ "count": 1,
+ "next": null,
+ "previous": null,
+ "results": [
+  {
+   "code": "EMSR695",
+   "name": "Earthquake in Marrakesh-Safi Region, Morocco",
+   "reason": "On the 08 September 2023 at 22:11 UTC, an earthquake is reported to have affected the Marrakesh-Safi Region of Morocco. The epicentre was approximately 72 km South-West from Marrakesh city (population of 840,000 people). Many casualties are reported and it is thought that many people are still trapped under the rubble or injured. Copernicus EMS Rapid Mapping is requested to provide damage assessment.",
+   "category": "Earthquake",
+   "subCategory": "Ground shaking",
+   "sensitive": false,
+   "reportLink": "https://storymaps.arcgis.com/stories/ef895cd6d85d4322ad0d4974a9a60dab",
+   "activator": "EC Services|DG ECHO",
+   "eventTime": "2023-09-08T22:11:00",
+   "activationTime": "2023-09-09T09:06:00",
+   "closed": true,
+   "gdacsId": "EQ1390643",
+   "continent": "Africa",
+   "countries": [
+    {
+     "name": "Morocco"
+    }
+   ],
+   "aois": [
+    {
+     "name": "Tamarirt",
+     "extent": "POLYGON ((-8.640289 31.207307, -8.688087 31.199324, -8.707251 31.245803, -8.702886 31.28828, -8.6412 31.303813, -8.623762 31.32623, -8.573778 31.330944, -8.513294 31.309892, -8.511651 31.232574, -8.582408 31.218159, -8.640289 31.207307))",
+     "number": 1,
+     "activationCode": "EMSR695",
+     "products": [
+      {
+       "id": 305,
+       "type": "GRA",
+       "monitoring": false,
+       "monitoringNumber": 0,
+       "feasible": true,
+       "images": [
+        {
+         "uuid": "af949920-e2af-49a4-bf31-d02481a248ef",
+         "new": true,
+         "sensorType": "optical",
+         "sensorName": "Pleiades",
+         "resolutionClass": "VHR1",
+         "acquisitionTime": "2023-09-10T11:16:00",
+         "fileName": "EMSR695_AOI01_GRA_PRODUCT_PLEIADES_20230910_1116_ORTHO.tif"
+        }
+       ],
+       "stats": {
+        "Built-up": {
+         "Residential Buildings": {
+          "unit": "",
+          "total": 299,
+          "affected": 273
+         }
+        },
+        "Transportation": {
+         "Cart Track": {
+          "unit": "km",
+          "total": 257.2,
+          "affected": 0.8
+         }
+        },
+        "Estimated population": {
+         "None": {
+          "unit": "",
+          "total": 36000
+         }
+        }
+       },
+       "mapsCount": 4,
+       "activationCode": "EMSR695",
+       "aoiName": "Tamarirt",
+       "aoiNumber": 1,
+       "extent": "POLYGON ((-8.640289 31.207307, -8.582408 31.218159, -8.511651 31.232574, -8.513294 31.309892, -8.573778 31.330944, -8.623762 31.32623, -8.6412 31.303813, -8.702886 31.28828, -8.707251 31.245803, -8.688087 31.199324, -8.640289 31.207307))",
+       "expectedDelivery": "2023-09-10T22:53:00",
+       "layers": [
+        {
+         "name": "EMSR695/AOI01/GRA_PRODUCT/EMSR695_AOI01_GRA_PRODUCT_PLEIADES_20230910_1116_ORTHO.tif",
+         "format": "cog"
+        },
+        {
+         "name": "EMSR695/AOI01/GRA_PRODUCT/EMSR695_AOI01_GRA_PRODUCT_builtUpP_v1_VT",
+         "format": "vt",
+         "sld": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR695/AOI01/GRA_PRODUCT/EMSR695_AOI01_GRA_PRODUCT_builtUpP_v1.sld",
+         "json": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR695/AOI01/GRA_PRODUCT/EMSR695_AOI01_GRA_PRODUCT_builtUpP_v1.json"
+        }
+       ],
+       "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR695/AOI01/GRA_PRODUCT/EMSR695_AOI01_GRA_PRODUCT_v1.zip",
+       "version": {
+        "uuid": "4bae8beb-39cf-4025-822f-b0b8f9f6749e",
+        "number": 1,
+        "reason": "",
+        "deliveryTime": "2023-09-12T09:12:00",
+        "lastUpdateTime": null,
+        "statusCode": "F"
+       }
+      }
+     ],
+     "blpPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR695/AOI01/EMSR695_AOI01_BLP.zip"
+    },
+    {
+     "name": "Talat-NYaaqoub",
+     "extent": "POLYGON ((-8.231361 30.943308, -8.231613 31.02012, -8.141782 31.020506, -8.141782 30.943308, -8.231361 30.943308))",
+     "number": 7,
+     "activationCode": "EMSR695",
+     "products": [
+      {
+       "id": 310,
+       "type": "GRA",
+       "monitoring": false,
+       "monitoringNumber": 0,
+       "feasible": true,
+       "images": [
+        {
+         "uuid": "955e62bb-96b7-49c1-bbc2-7bed969bc57e",
+         "new": true,
+         "sensorType": "optical",
+         "sensorName": "WorldView-3",
+         "resolutionClass": "VHR1",
+         "acquisitionTime": "2023-09-10T11:25:00",
+         "fileName": "EMSR695_AOI07_GRA_PRODUCT_WORLDVIEW3_20230910_1125_ORTHO.tif"
+        }
+       ],
+       "stats": {
+        "Built-up": {
+         "Unclassified": {
+          "unit": "",
+          "total": 737,
+          "affected": 238
+         },
+         "Residential Buildings": {
+          "unit": "",
+          "total": 1036,
+          "affected": 518
+         },
+         "Buildings used as places of worship and for religious activities": {
+          "unit": "",
+          "total": 4,
+          "affected": 1
+         }
+        },
+        "Transportation": {
+         "Primary Road": {
+          "unit": "km",
+          "total": 22.9,
+          "affected": 0.4
+         }
+        },
+        "Estimated population": {
+         "None": {
+          "unit": "",
+          "total": 14000
+         }
+        },
+        "Ancillary Crisis Information": {
+         "Blocked road / interruption": {
+          "unit": "",
+          "total": 3
+         }
+        }
+       },
+       "mapsCount": 1,
+       "activationCode": "EMSR695",
+       "aoiName": "Talat-NYaaqoub",
+       "aoiNumber": 7,
+       "extent": "POLYGON ((-8.141781999999997 30.943308, -8.231361 30.943308, -8.231613 31.020119999999995, -8.141781999999997 31.020506000000008, -8.141781999999997 30.943308))",
+       "expectedDelivery": "2023-09-11T00:00:00",
+       "layers": [
+        {
+         "name": "EMSR695/AOI07/GRA_PRODUCT/EMSR695_AOI07_GRA_PRODUCT_WORLDVIEW3_20230910_1125_ORTHO.tif",
+         "format": "cog"
+        },
+        {
+         "name": "EMSR695/AOI07/GRA_PRODUCT/EMSR695_AOI07_GRA_PRODUCT_ancillaryCrisisInfoP_v1_VT",
+         "format": "vt",
+         "sld": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR695/AOI07/GRA_PRODUCT/EMSR695_AOI07_GRA_PRODUCT_ancillaryCrisisInfoP_v1.sld",
+         "json": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR695/AOI07/GRA_PRODUCT/EMSR695_AOI07_GRA_PRODUCT_ancillaryCrisisInfoP_v1.json"
+        }
+       ],
+       "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR695/AOI07/GRA_PRODUCT/EMSR695_AOI07_GRA_PRODUCT_v2.zip",
+       "version": {
+        "uuid": "872dcbcc-f401-41db-8c2d-a12f7321b7da",
+        "number": 2,
+        "reason": "Correction of the map marginalia",
+        "deliveryTime": "2023-09-12T13:36:00",
+        "lastUpdateTime": null,
+        "statusCode": "F"
+       }
+      }
+     ],
+     "blpPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR695/AOI07/EMSR695_AOI07_BLP.zip"
+    }
+   ],
+   "centroid": "POINT (-8.313904 31.813978999999975)",
+   "infobulletins": [],
+   "stats": {
+    "Roads [km]": 3.0,
+    "Built-up [No.]": 1663,
+    "Population [No.]": "Not Available"
+   },
+   "charterNumber": "838",
+   "charterUrl": "https://disasterscharter.org/web/guest/activations/-/article/earthquake-in-morocco-activation-838-",
+   "extent": "POLYGON ((-9.698571 30.472681, -9.698571 31.389402, -7.900712 31.389402, -7.900712 30.472681, -9.698571 30.472681))",
+   "aws_bucket": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com",
+   "productsPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR695/EMSR695_products.zip",
+   "relatedevents": []
+  }
+ ]
+}

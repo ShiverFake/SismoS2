@@ -1,0 +1,517 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07) – controle 2020 · SismoS2</title>
+  <meta name="description" content="SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do Sentinel-2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  
+  <link rel="stylesheet" href="../../static/css/tokens.css">
+  <link rel="stylesheet" href="../../static/css/style.css">
+  <link rel="stylesheet" href="../../static/css/site.css">
+</head>
+
+<body class="app-mode vitrine">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  
+  
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../../" aria-label="SismoS2, início"><svg viewBox="0 0 34 22" aria-hidden="true"><path d="M1 11h7l2-4 3 12 3-17 3 14 2-7 2 2h10" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SismoS2</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" id="nav-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Abrir menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Principal">
+        
+        
+        <a href="../../">Início</a>
+        
+        
+        
+        
+        
+        <a href="../../analises/" aria-current="page">Análises</a>
+        
+        
+        
+        <a href="../../eventos/">Eventos</a>
+        
+        
+        
+        <a href="../../metodologia/">Metodologia</a>
+        
+        
+        
+        <a href="../../sobre/">Sobre</a>
+        
+        
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    
+
+
+
+<div class="result-head">
+  <div class="result-title">
+    <div>
+      <h1>Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07) – controle 2020</h1>
+      <p class="dates">
+        Imagens de 04/08/2020 (antes) e 19/08/2020 (depois)
+        
+      </p>
+      <div class="a-meta" style="margin-top:8px">
+        <span class="badge done">Concluída</span>
+        
+        <span class="badge plain">Controle 2020 de <a href="../../analise/47412403ace4/">Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07)</a></span>
+      </div>
+    </div>
+    <div class="result-actions">
+      
+      
+<button type="button" class="btn" data-goto="downloads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Baixar</span></button>
+      
+<button type="button" class="btn danger no-vitrine" id="delete-btn" ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span>Excluir</span></button>
+    </div>
+  </div>
+
+  
+  <section id="progress-box" class="processing" hidden aria-live="polite">
+    <h2>Processando a análise</h2>
+    <p class="muted">Leva cerca de um minuto. Pode fechar esta página: o processamento continua no servidor.</p>
+    <div class="progress"><div id="progress-bar" style="width:0%"></div></div>
+    <p id="progress-msg" class="small">Carregando…</p>
+    <ol class="proc-steps" id="proc-steps">
+      <li data-at="3">Preparar a grade de 10 m</li>
+      <li data-at="5">Buscar e avaliar as cenas antes do terremoto</li>
+      <li data-at="30">Buscar as cenas depois, no mesmo tile e órbita</li>
+      <li data-at="56">Corrigir o relevo e ler a área construída</li>
+      <li data-at="75">Detectar as mudanças</li>
+      <li data-at="88">Gerar camadas e arquivos</li>
+    </ol>
+    <div id="error-box" class="alert error" hidden></div>
+  </section>
+</div>
+
+<div id="results" class="results" >
+  <div class="result-head result-head-2">
+    <div class="kpis">
+      <div class="kpi ">
+  <div class="kpi-label">Área analisada</div>
+  <div class="kpi-value">73,8 km²</div>
+  <div class="kpi-hint">pixels sem nuvem nas duas datas</div>
+</div>
+      <div class="kpi tone-red" id="kpi-priority">
+        <div class="kpi-label">Células prioritárias</div>
+        <div class="kpi-value" id="kpi-priority-value">…</div>
+        <div class="kpi-hint" id="kpi-priority-hint">top 10% entre as células de 200 m com construções</div>
+      </div>
+      <div class="kpi" id="kpi-ranked">
+        <div class="kpi-label">Células no ranking</div>
+        <div class="kpi-value" id="kpi-ranked-value">…</div>
+        <div class="kpi-hint" id="kpi-ranked-hint">células de 200 m com construções</div>
+      </div>
+      
+        <div class="kpi ">
+  <div class="kpi-label">AUC da validação</div>
+  <div class="kpi-value">—</div>
+  <div class="kpi-hint">rode a validação na aba Validação</div>
+</div>
+      
+    </div>
+    <div class="tabs" role="tablist" aria-label="Resultado">
+  
+  <button type="button" class="tab" role="tab" id="tab-mapa" data-tab="mapa" aria-controls="panel-mapa"
+          aria-selected="true" tabindex="0">Mapa</button>
+  
+  <button type="button" class="tab" role="tab" id="tab-validacao" data-tab="validacao" aria-controls="panel-validacao"
+          aria-selected="false" tabindex="-1">Validação</button>
+  
+  <button type="button" class="tab" role="tab" id="tab-controles" data-tab="controles" aria-controls="panel-controles"
+          aria-selected="false" tabindex="-1">Controles<span class="count">0</span></button>
+  
+  <button type="button" class="tab" role="tab" id="tab-cenas" data-tab="cenas" aria-controls="panel-cenas"
+          aria-selected="false" tabindex="-1">Cenas e qualidade</button>
+  
+  <button type="button" class="tab" role="tab" id="tab-downloads" data-tab="downloads" aria-controls="panel-downloads"
+          aria-selected="false" tabindex="-1">Downloads</button>
+  
+</div>
+  </div>
+
+  <div class="result-body">
+    
+    <section class="tab-panel" id="panel-mapa" data-panel="mapa" role="tabpanel" aria-labelledby="tab-mapa">
+      <div class="map-area">
+        <div id="map" class="map"></div>
+        <div id="compare" class="compare" hidden>
+          <div class="compare-pane"><span class="tag">Antes</span><div id="map-before"></div></div>
+          <div class="compare-pane"><span class="tag">Depois</span><div id="map-after"></div></div>
+        </div>
+        <div class="view-toggle">
+          <button class="btn small active" data-view="single">Mapa único</button>
+          <button class="btn small" data-view="compare">Lado a lado</button>
+        </div>
+        <aside class="float-panel" id="float-panel" aria-label="Camadas e legendas">
+          <header>
+            <h2>Camadas e legendas</h2>
+            <button type="button" class="fp-toggle" id="fp-toggle" aria-expanded="true" aria-controls="fp-body">Recolher</button>
+          </header>
+          <div class="fp-body" id="fp-body">
+            <div class="fp-section priority-layer" id="priority-layer">
+              <h3>Prioridade de vistoria</h3>
+              <label class="layer-row"><input type="checkbox" id="priority-toggle"> Células de 200 m por faixa de prioridade</label>
+              <ul class="legend small" id="priority-legend" hidden></ul>
+              <p class="small" id="priority-msg"></p>
+              <p class="hint">Ranking relativo da % de mudança dentro deste retângulo: indica onde olhar primeiro, não é
+                um diagnóstico de dano.</p>
+            </div>
+            <div class="fp-section">
+              <h3>Imagens e camadas de análise</h3>
+              <div id="layer-list" class="layer-list"></div>
+              <label class="slider">Opacidade da camada de análise
+                <input type="range" id="opacity" min="0" max="100" value="85">
+              </label>
+            </div>
+            
+            <div class="fp-section">
+              <h3>Legenda do mapa de mudanças</h3>
+              <ul id="legend" class="legend"></ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    
+    <section class="tab-panel scroll" id="panel-validacao" data-panel="validacao" role="tabpanel" aria-labelledby="tab-validacao" hidden>
+      <div class="val-layout" id="validation">
+        <div class="card val-form-card no-vitrine">
+          <h2>Validar com dados oficiais</h2>
+          <p class="card-sub">Compara o mapa de mudanças com um mapa de dano feito por fotointérpretes.</p>
+          <form id="val-form" novalidate>
+            <label class="field">Fonte da referência
+              <select id="val-source">
+                <option value="ems">Copernicus EMS (download automático)</option>
+                <option value="file">Arquivo: GeoJSON ou .zip (EMS, UNOSAT…)</option>
+              </select>
+            </label>
+            <div id="val-ems" class="grid2">
+              <label class="field">Ativação<input id="val-activation" placeholder="EMSR695" value=""></label>
+              <label class="field">Nº da AOI<input id="val-aoi" type="number" min="1" max="99" value=""></label>
+            </div>
+            <label class="field" id="val-file-wrap" hidden>Arquivo
+              <input type="file" id="val-file" accept=".zip,.json,.geojson">
+            </label>
+            <details>
+              <summary>Parâmetros da validação</summary>
+              <label class="field">Tolerância de posição (m)
+                <input type="number" id="val-buffer" min="0" max="50" step="1" value="10">
+              </label>
+              <label class="field">Unidade de avaliação
+                <select id="val-unit">
+                  <option value="osm">Prédio do OSM (pontos do mesmo prédio viram uma unidade)</option>
+                  <option value="ponto">Ponto do GRA (cada ponto é uma unidade)</option>
+                </select>
+              </label>
+              <label class="field">"Possivelmente danificado"
+                <select id="val-possible">
+                  <option value="excluir">(a) excluir da avaliação, padrão</option>
+                  <option value="dano">(b) contar como dano</option>
+                  <option value="sem_dano">(c) contar como sem dano</option>
+                </select>
+              </label>
+              <label class="field">Quadrícula: o sistema aponta a célula se ≥ <b id="val-grid-thr-label">10</b>% dos pixels mudaram
+                <input type="range" id="val-grid-thr" min="1" max="50" step="1" value="10">
+              </label>
+            </details>
+            <p class="hint">Detalhes em <a href="../../metodologia/#validacao">Metodologia</a>.</p>
+            <div id="val-error" class="alert error" hidden></div>
+            <button type="submit" class="btn primary block" id="val-btn" style="margin-top:16px">Validar</button>
+          </form>
+          <div id="val-progress" hidden>
+            <div class="progress"><div id="val-bar" style="width:0%"></div></div>
+            <p id="val-msg" class="muted small"></p>
+          </div>
+        </div>
+
+        <div class="val-results" id="val-results" hidden>
+          <p class="muted small" id="val-source-info"></p>
+
+          
+          <section class="card val-main" id="val-main" aria-labelledby="h-val-main">
+            <div class="val-main-head">
+              <div>
+                <h2 id="h-val-main">Resultado principal</h2>
+                <p class="card-sub" id="val-main-sub">Células de 200 m: a % de mudança separa as células danificadas das demais?</p>
+              </div>
+              <p class="val-verdict" id="val-verdict"></p>
+            </div>
+            <div class="val-main-grid">
+              <div class="val-auc" id="val-auc"></div>
+              <figure class="val-triage">
+                <figcaption>Curva de triagem: visitando as células da mais mudada para a menos mudada</figcaption>
+                <div id="val-triage-svg"></div>
+              </figure>
+            </div>
+            <div class="val-main-foot">
+              <img id="val-gc-plot" class="val-plot narrow" alt="Curvas ROC do evento e dos controles (células de 200 m)" hidden>
+              <div id="val-gc" hidden>
+                <details>
+                  <summary>Todos os tamanhos de célula e cada ano de controle</summary>
+                  <p class="hint" id="val-gc-note"></p>
+                  <div class="table-scroll"><table class="stats compact sens-table" id="val-gc-table"></table></div>
+                </details>
+              </div>
+            </div>
+          </section>
+
+          
+          <section class="card" aria-labelledby="h-val-grid">
+            <div class="val-sec-head">
+              <div><h2 id="h-val-grid">Avaliação por quadrícula</h2>
+                <p class="card-sub">Prédios do OSM, "possivelmente danificado" fora da conta. Células com mais de 50% de água não entram.</p></div>
+              <label class="field inline">Tamanho da célula
+                <select id="val-grid-size"><option value="50">50 m</option><option value="100">100 m</option><option value="200" selected>200 m</option></select>
+              </label>
+            </div>
+            <div class="table-scroll"><table class="stats compact sens-table" id="val-grid-table"></table></div>
+            <img id="val-grid-plot" class="val-plot" alt="Dispersão e curva de triagem por quadrícula">
+            <div class="table-scroll"><table class="stats compact sens-table" id="val-grid-triage"></table></div>
+            <label class="check"><input type="checkbox" id="val-grid-toggle"> Mostrar a grade na aba Mapa</label>
+            <ul class="legend small" id="val-grid-legend" hidden>
+              <li><span class="swatch grid-ramp"></span>% dos pixels com mudança (0 a 50% ou mais)</li>
+              <li><span class="swatch" style="background:transparent;border:2px solid #dc2626"></span>Célula danificada (≥ 20% dos prédios)</li>
+            </ul>
+          </section>
+
+          
+          <section class="card" aria-labelledby="h-val-bld">
+            <h2 id="h-val-bld">Avaliação por prédio</h2>
+            <p class="card-sub">Cada prédio da referência conta como acerto, erro ou alarme falso.</p>
+            <div class="metric-cards" id="val-cards"></div>
+            <div class="panel-grid" style="margin-top:16px">
+              <div><h3>Matriz de confusão</h3><table class="confusion" id="val-confusion"></table></div>
+              <div id="val-urban" hidden><h3>Só na área urbana</h3><p class="card-sub">Prédios em área construída do WorldCover</p>
+                <div class="metric-cards" id="val-urban-cards"></div><table class="confusion" id="val-urban-confusion"></table></div>
+            </div>
+            <div class="panel-grid" style="margin-top:16px">
+              <div><h3>Intervalos de confiança 95%</h3><p class="card-sub">Bootstrap, 1000 reamostragens dos prédios</p>
+                <div class="table-scroll"><table class="stats compact sens-table" id="val-ci"></table></div></div>
+              <div><h3>Detecção por grau de dano</h3><table class="stats" id="val-grades"></table></div>
+            </div>
+            <h3 style="margin-top:20px">Comparação de métodos</h3>
+            <div class="table-scroll"><table class="stats compact" id="val-experiments"></table></div>
+            <label class="check"><input type="checkbox" id="val-layer-toggle"> Mostrar as edificações de referência na aba Mapa</label>
+            <ul class="legend" id="val-legend" hidden>
+              <li><span class="swatch round" style="background:#22c55e"></span>Dano detectado (VP)</li>
+              <li><span class="swatch round" style="background:#ef4444"></span>Dano não detectado (FN)</li>
+              <li><span class="swatch round" style="background:#f59e0b"></span>Alarme falso (FP)</li>
+              <li><span class="swatch round" style="background:#94a3b8"></span>Sem dano, sem alarme (VN)</li>
+            </ul>
+          </section>
+          <section class="card" aria-labelledby="h-val-neigh">
+            <h2 id="h-val-neigh">Efeito de vizinhança</h2><p class="card-sub">Distância ao prédio destruído mais próximo</p>
+            <img id="val-neigh-plot" class="val-plot narrow" alt="Recall e alarme falso pela distância ao prédio destruído mais próximo">
+            <div class="table-scroll"><table class="stats compact sens-table" id="val-neigh"></table></div>
+          </section>
+          <section class="card" aria-labelledby="h-val-sens">
+            <h2 id="h-val-sens">Análise de sensibilidade</h2>
+            <div class="table-scroll"><table class="stats compact sens-table" id="val-sensitivity"></table></div>
+            <h3 style="margin-top:20px">Ligação dos pontos da referência aos prédios do OSM</h3>
+            <div class="table-scroll"><table class="stats compact sens-table" id="val-link"></table></div>
+            <ul class="notes" id="val-notes"></ul>
+          </section>
+          <div class="downloads" hidden>
+            <a class="btn small" id="val-csv" download>Tabela (CSV)</a>
+            <a class="btn small" id="val-json" download>Resultado (JSON)</a>
+            <a class="btn small" id="val-geojson" download>Edificações (GeoJSON)</a>
+          </div>
+          <button class="btn small no-vitrine" id="val-again">Validar de novo com outros parâmetros</button>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="tab-panel scroll" id="panel-controles" data-panel="controles" role="tabpanel" aria-labelledby="tab-controles" hidden>
+      <div class="narrow-col">
+        <div class="card" id="control">
+          <h2>Anos sem terremoto</h2>
+          <p class="card-sub">A mesma análise repetida em anos anteriores, na mesma época do ano e no mesmo tile. O que muda
+            num ano normal é ruído de fundo: estação, lavouras, obras, sombras.</p>
+          <div id="ctl-start">
+            <p class="hint">Só valem pares com ≥ 70% do retângulo válido nas duas datas e sem névoa (AOT ≤ 0,25). Um ano sem par
+              válido fica registrado com o motivo, e o sistema tenta o anterior até completar 3 controles.</p>
+            <div id="ctl-years" class="ctl-years" hidden></div>
+            <div id="ctl-error" class="alert error" hidden></div>
+            <button type="button" class="btn primary no-vitrine" id="ctl-btn" style="margin-top:12px">Rodar controles</button>
+            <label class="check no-vitrine"><input type="checkbox" id="ctl-redo"> Refazer do zero (apaga os controles atuais)</label>
+          </div>
+          <div id="ctl-progress" hidden></div>
+          <div id="ctl-results" hidden>
+            <div class="ctl-compare" id="ctl-cards"></div>
+            <p class="hint" id="ctl-threshold-note"></p>
+            <div class="table-scroll"><table class="stats compact ctl-table" id="ctl-table"></table></div>
+            <h3 style="margin-top:20px">Magnitude CVA na área urbana comum</h3>
+            <div class="table-scroll"><table class="stats compact ctl-table" id="ctl-magnitude"></table></div>
+            <dl class="summary" id="ctl-summary"></dl>
+            <label class="check"><input type="checkbox" id="ctl-layer-toggle">
+              <span class="swatch" style="background:rgb(34,211,238)"></span>Mostrar na aba Mapa o que mudou no evento e em algum
+              ano de controle (provável falso positivo)</label>
+          </div>
+          <div id="ctl-is-control" class="alert info" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="tab-panel scroll" id="panel-cenas" data-panel="cenas" role="tabpanel" aria-labelledby="tab-cenas" hidden>
+      <div class="panel-grid">
+        <div class="card wide" id="quality-card"><h2>Avisos de qualidade</h2>
+          <div id="quality-warnings" class="quality-warnings stack"></div>
+          <p class="hint" id="no-warnings">Nenhum aviso: datas limpas, mesmo tile e órbita, intervalo curto.</p></div>
+        <div class="card wide change-share">
+          <div>
+            <h2>Mudança detectada</h2>
+            <p class="change-share-value"><b>2,9%</b> da área analisada
+              <span class="muted">(2,14 km² de 73,8 km²)</span></p>
+          </div>
+          <p class="hint">Com o limiar μ+2σ, essa porcentagem tende a ficar entre 2 e 5% em qualquer par de datas; por isso
+            não indica sozinha a gravidade do evento. O que separa o terremoto de um ano normal está na aba Validação,
+            na comparação com os anos de controle.</p>
+        </div>
+        <div class="card"><h2>Resumo</h2><dl id="summary" class="summary"></dl></div>
+        <div class="card"><h2>Área por classe de mudança</h2>
+          <table class="stats"><thead><tr><th>Classe</th><th>km²</th><th>%</th></tr></thead><tbody id="stats-body"></tbody></table></div>
+        <div class="card wide"><h2>Cenas utilizadas</h2><div id="scenes" class="scenes scenes-grid"></div></div>
+      </div>
+    </section>
+
+    
+    <section class="tab-panel scroll" id="panel-downloads" data-panel="downloads" role="tabpanel" aria-labelledby="tab-downloads" hidden>
+      <div class="narrow-col">
+        <div class="page-head"><h2 style="font-size:var(--fs-2xl)">Downloads</h2>
+          <p class="small">Os GeoTIFFs estão na projeção Web Mercator (EPSG:3857), com pixels de cerca de 10 m, e abrem no QGIS.</p>
+          
+          
+<div class="alert info" role="status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div>Nesta versão de demonstração os GeoTIFFs não estão publicados, por causa do tamanho. Os outros arquivos podem ser baixados normalmente.</div></div>
+          </div>
+        
+        
+        <div class="table-wrap"><table class="data ">
+  <thead><tr><th>Arquivo</th><th>O que contém</th><th class="r"></th></tr></thead>
+  <tbody>
+          
+          <tr><td><b>Classes de mudança</b><br><span class="faint small">change_classes.tif</span></td><td class="muted">GeoTIFF com paleta: 0 sem mudança, 1 perda de vegetação, 2 entulho urbano, 3 água, 4 outras, 5 solo exposto</td>
+            <td class="r">
+              
+                <span class="faint small">no servidor do projeto</span>
+              </td></tr>
+          
+          <tr><td><b>Magnitude CVA</b><br><span class="faint small">magnitude.tif</span></td><td class="muted">GeoTIFF: tamanho da mudança espectral em cada pixel</td>
+            <td class="r">
+              
+                <span class="faint small">no servidor do projeto</span>
+              </td></tr>
+          
+          <tr><td><b>ΔNDVI</b><br><span class="faint small">dndvi.tif</span></td><td class="muted">GeoTIFF: NDVI depois menos NDVI antes</td>
+            <td class="r">
+              
+                <span class="faint small">no servidor do projeto</span>
+              </td></tr>
+          
+          <tr><td><b>Prioridade de vistoria</b><br><span class="faint small">priority_200.geojson</span></td><td class="muted">GeoJSON: células de 200 m com a posição no ranking e a faixa</td>
+            <td class="r">
+              
+              <a class="btn small" href="../../api/analises/27db1a275166/arquivos/priority_200.geojson" download
+                 data-needs-priority><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Baixar</span></a>
+              </td></tr>
+          
+          <tr><td><b>Metadados da análise</b><br><span class="faint small">analysis.json</span></td><td class="muted">Cenas, parâmetros, estatísticas e avisos</td>
+            <td class="r">
+              
+              <a class="btn small" href="../../api/analises/27db1a275166/arquivos/analysis.json" download
+                 ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Baixar</span></a>
+              </td></tr>
+          
+        </tbody>
+</table></div>
+        <div id="downloads" hidden></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<dialog id="delete-dialog" class="dialog">
+  <h3>Excluir esta análise?</h3>
+  <p><strong>Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07) – controle 2020</strong></p>
+  <p class="muted">Serão apagados permanentemente as camadas do mapa, os GeoTIFFs, as bandas salvas e a validação desta
+    análise. Esta ação não pode ser desfeita.</p>
+  <div id="delete-error" class="alert error" hidden></div>
+  <div class="dialog-actions">
+    <button type="button" class="btn" id="delete-cancel">Cancelar</button>
+    <button type="button" class="btn danger-solid" id="delete-confirm">Excluir definitivamente</button>
+  </div>
+</dialog>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <h2>SismoS2</h2>
+        <p>Detecção de mudanças após terremotos com imagens Sentinel-2. Trabalho acadêmico; os mapas indicam onde olhar
+          primeiro e não substituem a vistoria em campo.</p>
+      </div>
+      <div>
+        <h2>Fontes de dados</h2>
+        <ul>
+          <li><a href="https://earth-search.aws.element84.com/v1" rel="noopener">Sentinel-2 L2A (Earth Search, Element84/AWS)</a></li>
+          <li><a href="https://rapidmapping.emergency.copernicus.eu/" rel="noopener">Copernicus EMS Rapid Mapping</a></li>
+          <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="noopener">USGS Earthquake Hazards</a></li>
+          <li><a href="https://esa-worldcover.org/" rel="noopener">ESA WorldCover 2021</a></li>
+          <li><a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap e HOT</a></li>
+          <li><a href="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model" rel="noopener">Copernicus DEM GLO-30</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>window.SISMOS2_STATIC = { base: "../../" };</script>
+  <script src="../../static/js/common.js"></script>
+  <script>
+    (function () {   // menu do celular
+      const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
+      t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
+    })();
+  </script>
+  
+<script>
+  window.ANALYSIS_ID = "27db1a275166";
+  window.ANALYSIS_BBOX = [-8.23161, 30.94331, -8.14178, 31.02051];
+  window.ANALYSIS_EMS = null;
+  window.ANALYSIS_DATES = {"after": ["2020-08-19", "2020-08-19"], "before": ["2020-08-04", "2020-08-04"]};
+</script>
+<script src="../../static/js/result.js"></script>
+<script src="../../static/js/analysis.js"></script>
+<script src="../../static/js/validation.js"></script>
+<script src="../../static/js/control.js"></script>
+<script src="../../static/js/official.js"></script>
+<script src="../../static/js/priority.js"></script>
+
+</body>
+</html>

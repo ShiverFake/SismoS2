@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+{% block title %}Eventos{% endblock %}
+{% block body_class %}app-mode{% endblock %}
+{% block content %}
+<div class="events">
+  <aside class="events-side" aria-labelledby="h-eventos">
+    <h1 id="h-eventos">Eventos</h1>
+    <p class="muted small">Terremotos recentes do USGS e as áreas que o Copernicus EMS mapeou depois de cada um.
+      {% if config.get("VITRINE") %}Escolha um item para ver no mapa. Os terremotos vêm ao vivo do USGS; a lista do
+      Copernicus EMS foi gerada junto com esta versão.{% else %}Escolha um item para ver no mapa e começar uma análise com Sentinel-2.{% endif %}</p>
+
+    <details class="card filters" open>
+      <summary>Filtros</summary>
+      <label class="field">Período
+        <select id="ev-period">
+          <option value="week">Últimos 7 dias</option>
+          <option value="month">Últimos 30 dias</option>
+          <option value="custom">Escolher datas</option>
+        </select>
+      </label>
+      <div class="grid2" id="ev-custom" hidden>
+        <label class="field">Início<input type="date" id="ev-start"></label>
+        <label class="field">Fim<input type="date" id="ev-end"></label>
+      </div>
+      <label class="field">Magnitude mínima: <b id="ev-mag-label">5.5</b>
+        <input type="range" id="ev-mag" min="4.5" max="8" step="0.1" value="5.5">
+      </label>
+      <label class="check"><input type="checkbox" id="ev-ems-all" checked>
+        <span>Todas as ativações do Copernicus EMS<br><span class="hint">Desmarque para usar o mesmo período.</span></span></label>
+      <button type="button" class="btn primary block" id="ev-apply" style="margin-top:16px">Atualizar</button>
+    </details>
+
+    <div id="ev-error" class="alert error" hidden></div>
+
+    <section class="ev-group">
+      <h2>Copernicus EMS <span class="faint small" id="ev-ems-count"></span></h2>
+      <p class="hint">Terremotos com mapa de dano feito por fotointérpretes: dá para validar o resultado.</p>
+      <ul class="ev-list" id="ev-ems-list"><li class="muted small">Carregando…</li></ul>
+      <p class="hint" id="ev-ems-note"></p>
+    </section>
+
+    <section class="ev-group">
+      <h2>USGS <span class="faint small" id="ev-usgs-count"></span></h2>
+      <p class="hint" id="ev-usgs-source"></p>
+      <ul class="ev-list" id="ev-usgs-list"><li class="muted small">Carregando…</li></ul>
+    </section>
+  </aside>
+  <div class="events-map">
+    <div id="map" class="map" aria-label="Mapa de eventos"></div>
+    <div class="map-legend card">
+      <b>Legenda</b>
+      <ul class="legend small">
+        <li><span class="swatch round" style="background:#facc15"></span>Terremoto USGS (tamanho = magnitude)</li>
+        <li><span class="swatch" style="background:rgba(124,58,237,.35);border:2px solid #7c3aed"></span>Área do EMS com mapa de dano</li>
+        <li><span class="swatch" style="background:rgba(100,116,139,.35);border:2px solid #64748b"></span>Área do EMS sem mapa de dano</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>window.MAX_BBOX_DEG = {{ max_bbox_deg | tojson }};</script>
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+{% endblock %}

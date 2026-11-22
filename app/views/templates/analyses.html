@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui %}
+{% block title %}Análises{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-head">
+    <h1>Análises</h1>
+    <p>{% if config.get("VITRINE") %}As análises em destaque, com os anos de controle dentro de cada uma.
+      As demais ficam no servidor do projeto.{% else %}Todas as análises feitas neste servidor. Os anos de controle de cada uma ficam dentro dela.{% endif %}</p>
+  </div>
+
+  {% if cards %}
+  <form class="toolbar" role="search" onsubmit="return false">
+    <label class="grow">Buscar pelo nome
+      <input type="search" id="f-text" placeholder="Ex.: Antakya" autocomplete="off">
+    </label>
+    {% if not config.get("VITRINE") %}
+    <label>Status
+      <select id="f-status">
+        <option value="done" selected>Concluídas</option>
+        <option value="error">Com erro</option>
+        <option value="processing">Processando</option>
+        <option value="">Todas</option>
+      </select>
+    </label>
+    <label>Validação
+      <select id="f-val">
+        <option value="">Com ou sem</option>
+        <option value="sim">Com validação</option>
+        <option value="nao">Sem validação</option>
+      </select>
+    </label>
+    {% endif %}
+    {% if not config.get("VITRINE") %}{{ ui.button("Nova análise", url_for("main.new_analysis"), "primary", "plus") }}{% endif %}
+  </form>
+  <p class="muted small" id="f-count" aria-live="polite"></p>
+
+  <div class="gallery" id="gallery">
+    {% for c in cards %}
+    <article class="a-card{% if c.featured %} featured{% endif %}" data-id="{{ c.id }}"
+       data-name="{{ c.name | lower }}" data-status="{{ 'processing' if c.status == 'pending' else c.status }}"
+       data-val="{{ 'sim' if c.validated else 'nao' }}">
+      {% if c.status in ("done", "error") and not config.get("VITRINE") %}
+      <button type="button" class="star" aria-pressed="{{ 'true' if c.featured else 'false' }}"
+              title="{{ 'Tirar o destaque' if c.featured else 'Destacar: fixa no topo da galeria' }}">
+        {{ ui.icon("star") }}<span class="visually-hidden">Destacar {{ c.name }}</span></button>
+      {% endif %}
+      <div class="a-thumb">
+        {% if c.has_thumb %}
+        <img src="{{ url_for('main.thumbnail', analysis_id=c.id) }}" loading="lazy" alt="Mapa de prioridade de {{ c.name }}">
+        {% else %}{{ ui.icon("map") }}{% endif %}
+      </div>
+      <div class="a-body">
+        <div class="a-meta">{{ ui.badge(c.status) }}{% if c.validated %}{{ ui.badge("info", "Validada") }}{% endif %}</div>
+        <h3><a class="a-link" href="{{ url_for('main.analysis_page', analysis_id=c.id) }}">{{ c.name }}</a></h3>
+        <p class="a-dates">Antes {{ c.before[0] | data_br }} a {{ c.before[1] | data_br }}<br>
+          Depois {{ c.after[0] | data_br }} a {{ c.after[1] | data_br }}</p>
+        {% if c.status == "error" and c.error %}
+        <p class="a-error" title="{{ c.error }}">{{ c.error }}</p>
+        {% endif %}
+        {% if c.status == "done" %}
+        {% if config.get("VITRINE") %}
+        <div class="a-stats four">
+          <div>Células prioritárias<b>{{ c.top10_n_cells if c.top10_n_cells is not none else "—" }}</b></div>
+          <div>AUC<b>{{ c.auc200 | br if c.auc200 is not none else "—" }}</b></div>
+          <div>Área<b>{{ c.valid_area_km2 | br(0) }} km²</b></div>
+          <div>Controles<b>{{ c.n_controls }}</b></div>
+        </div>
+        {% else %}
+        <div class="a-stats">
+          <div>Mudança<b>{{ c.changed_percent | br(1) }}%</b></div>
+          <div>Área<b>{{ c.valid_area_km2 | br(0) }} km²</b></div>
+          <div>Controles<b>{{ c.n_controls }}</b></div>
+        </div>
+        {% endif %}
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  <div id="f-empty" hidden>
+    {{ ui.empty("Nenhuma análise com esses filtros",
+                "Limpe a busca." if config.get("VITRINE") else "Limpe a busca ou escolha \"Todas\" em Status.") }}
+  </div>
+  {% else %}
+    {{ ui.empty("Nenhuma análise ainda",
+                "Escolha uma área no mapa e as datas antes e depois do terremoto. O processamento leva cerca de um minuto.",
+                "Começar uma análise", url_for("main.new_analysis")) }}
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {   // filtros da galeria (no navegador; a lista é pequena)
+    const $ = (id) => document.getElementById(id);
+    if (!$("gallery")) return;
+    const cards = [...document.querySelectorAll("#gallery .a-card")];
+    function apply() {
+      const q = $("f-text").value.trim().toLowerCase();
+      const st = $("f-status") ? $("f-status").value : "", val = $("f-val") ? $("f-val").value : "";   // a vitrine só tem a busca
+      let n = 0;
+      cards.forEach((c) => {
+        const show = (!q || c.dataset.name.includes(q)) && (!st || c.dataset.status === st) && (!val || c.dataset.val === val);
+        c.hidden = !show;
+        n += show;
+      });
+      $("f-count").textContent = `${n} de ${cards.length} análises`;
+      $("f-empty").hidden = n > 0;
+    }
+    ["f-text", "f-status", "f-val"].forEach((k) => $(k) && $(k).addEventListener("input", apply));
+    apply();
+
+    // estrela "Destacar": grava no servidor e leva o card para o topo
+    const gallery = $("gallery");
+    gallery.addEventListener("click", async (e) => {   // (na vitrine não há estrelas: o clique não acha .star)
+      const btn = e.target.closest(".star");
+      if (!btn) return;
+      const card = btn.closest(".a-card"), on = btn.getAttribute("aria-pressed") !== "true";
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/analises/${card.dataset.id}/destaque`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ featured: on }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        btn.setAttribute("aria-pressed", String(on));
+        btn.title = on ? "Tirar o destaque" : "Destacar: fixa no topo da galeria";
+        card.classList.toggle("featured", on);
+        const featured = [...gallery.querySelectorAll(".a-card.featured")];
+        if (on) gallery.prepend(card);
+        else if (featured.length) featured[featured.length - 1].after(card);
+      } catch (err) {
+        alert(err.message || "Não foi possível destacar agora.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+{% endblock %}

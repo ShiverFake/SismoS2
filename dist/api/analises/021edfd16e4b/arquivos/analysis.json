@@ -1,0 +1,429 @@
+{
+  "id": "021edfd16e4b",
+  "name": "Antakya 2023 – com correção topográfica – controle 2020",
+  "bbox": [
+    36.12,
+    36.17,
+    36.2,
+    36.24
+  ],
+  "before_start": "2020-01-11",
+  "before_end": "2020-01-11",
+  "after_start": "2020-01-16",
+  "after_end": "2020-01-16",
+  "max_cloud": 80,
+  "threshold_method": "kstd",
+  "k": 2.0,
+  "min_region_px": 6,
+  "median_composite": false,
+  "topo_correction": true,
+  "event_id": "turquia-2023",
+  "control_id": null,
+  "control_of": "9ea9d74fe815",
+  "preferred_tile": "36SYF",
+  "control_ids": [],
+  "control_year": 2020,
+  "pair_window": {
+    "start": "2020-01-01",
+    "end": "2020-03-15",
+    "target_gap_days": 15,
+    "relative_orbit": 121,
+    "min_valid": 0.7
+  },
+  "control_excluded": null,
+  "ems_activation": null,
+  "ems_aoi": null,
+  "featured": false,
+  "status": "done",
+  "progress": 100,
+  "message": "Concluído",
+  "error": null,
+  "created_at": "2026-11-21T23:49:32+00:00",
+  "finished_at": "2026-11-21T23:50:22+00:00",
+  "result": {
+    "bounds": [
+      [
+        36.16993138617247,
+        36.12
+      ],
+      [
+        36.23999999999999,
+        36.200044822177276
+      ]
+    ],
+    "grid": {
+      "width": 719,
+      "height": 780,
+      "crs": "EPSG:3857",
+      "resolution_m": 10.0,
+      "ground_resolution_m": 10.0,
+      "transform": [
+        12.392974750226173,
+        0.0,
+        4020860.007453041,
+        0.0,
+        -12.392974750226173,
+        4333695.452025571
+      ]
+    },
+    "before": {
+      "item_id": "S2B_36SYF_20200111_1_L2A",
+      "datetime": "2020-01-11T08:29:55.836000Z",
+      "cloud_cover": 0.002011,
+      "platform": "sentinel-2b",
+      "tile": "36SYF",
+      "relative_orbit": 121,
+      "processing_baseline": "05.00",
+      "radiometry": "offset já removido pelo provedor (boa_offset_applied)",
+      "clear_fraction": 1.0,
+      "sun_azimuth": 160.23,
+      "sun_elevation": 29.04,
+      "topo": {
+        "c": {
+          "blue": {
+            "c": null,
+            "r": 0.12
+          },
+          "green": {
+            "c": null,
+            "r": 0.147
+          },
+          "red": {
+            "c": null,
+            "r": 0.161
+          },
+          "nir": {
+            "c": null,
+            "r": 0.12
+          },
+          "swir16": {
+            "c": 1.3389,
+            "r": 0.255
+          },
+          "swir22": {
+            "c": 0.9839,
+            "r": 0.265
+          }
+        }
+      },
+      "aot": 0.106,
+      "n_scenes": 1,
+      "scenes": [
+        {
+          "item_id": "S2B_36SYF_20200111_1_L2A",
+          "datetime": "2020-01-11T08:29:55.836000Z",
+          "clear_fraction": 1.0,
+          "sun_azimuth": 160.23,
+          "sun_elevation": 29.04,
+          "topo": {
+            "c": {
+              "blue": {
+                "c": null,
+                "r": 0.12
+              },
+              "green": {
+                "c": null,
+                "r": 0.147
+              },
+              "red": {
+                "c": null,
+                "r": 0.161
+              },
+              "nir": {
+                "c": null,
+                "r": 0.12
+              },
+              "swir16": {
+                "c": 1.3389,
+                "r": 0.255
+              },
+              "swir22": {
+                "c": 0.9839,
+                "r": 0.265
+              }
+            }
+          },
+          "aot": 0.106
+        }
+      ]
+    },
+    "after": {
+      "item_id": "S2A_36SYF_20200116_1_L2A",
+      "datetime": "2020-01-16T08:29:55.297000Z",
+      "cloud_cover": 29.766911,
+      "platform": "sentinel-2a",
+      "tile": "36SYF",
+      "relative_orbit": 121,
+      "processing_baseline": "05.00",
+      "radiometry": "offset já removido pelo provedor (boa_offset_applied)",
+      "clear_fraction": 0.9256,
+      "sun_azimuth": 159.46,
+      "sun_elevation": 29.72,
+      "topo": {
+        "c": {
+          "blue": {
+            "c": null,
+            "r": -0.217
+          },
+          "green": {
+            "c": null,
+            "r": -0.206
+          },
+          "red": {
+            "c": null,
+            "r": -0.139
+          },
+          "nir": {
+            "c": null,
+            "r": -0.23
+          },
+          "swir16": {
+            "c": null,
+            "r": 0.031
+          },
+          "swir22": {
+            "c": null,
+            "r": 0.089
+          }
+        }
+      },
+      "aot": 0.136,
+      "n_scenes": 1,
+      "scenes": [
+        {
+          "item_id": "S2A_36SYF_20200116_1_L2A",
+          "datetime": "2020-01-16T08:29:55.297000Z",
+          "clear_fraction": 0.9256,
+          "sun_azimuth": 159.46,
+          "sun_elevation": 29.72,
+          "topo": {
+            "c": {
+              "blue": {
+                "c": null,
+                "r": -0.217
+              },
+              "green": {
+                "c": null,
+                "r": -0.206
+              },
+              "red": {
+                "c": null,
+                "r": -0.139
+              },
+              "nir": {
+                "c": null,
+                "r": -0.23
+              },
+              "swir16": {
+                "c": null,
+                "r": 0.031
+              },
+              "swir22": {
+                "c": null,
+                "r": 0.089
+              }
+            }
+          },
+          "aot": 0.136
+        }
+      ]
+    },
+    "same_tile": true,
+    "same_orbit": true,
+    "warnings": [],
+    "notes": [
+      "Controle 2020: par 2020-01-11 → 2020-01-16 (5 dias; alvo 15) escolhido entre 10 cenas; 93% do retângulo válido nas duas."
+    ],
+    "topo": {
+      "requested": true,
+      "applied": true,
+      "dem": "cop-dem-glo-30",
+      "bands_corrected": 2,
+      "bands_total": 12,
+      "slope_mean_deg": 9.17
+    },
+    "worldcover": true,
+    "statistics": {
+      "valid_pixels": 519062,
+      "valid_area_km2": 51.906,
+      "total_pixels": 560820,
+      "changed_pixels": 17612,
+      "changed_area_km2": 1.7612,
+      "changed_percent": 3.393,
+      "cva_threshold": 0.14403,
+      "dndvi_mean": -0.0742,
+      "classes": [
+        {
+          "id": 0,
+          "name": "Sem mudança",
+          "color": "rgba(0,0,0,0.24)",
+          "pixels": 501450,
+          "area_km2": 50.145,
+          "percent": 96.607
+        },
+        {
+          "id": 1,
+          "name": "Perda de vegetação (possível deslizamento)",
+          "color": "rgba(245,130,32,0.90)",
+          "pixels": 11390,
+          "area_km2": 1.139,
+          "percent": 2.194
+        },
+        {
+          "id": 2,
+          "name": "Solo exposto / entulho em área urbana (possível dano em construções)",
+          "color": "rgba(220,38,38,0.90)",
+          "pixels": 942,
+          "area_km2": 0.0942,
+          "percent": 0.181
+        },
+        {
+          "id": 3,
+          "name": "Mudança em corpos d'água",
+          "color": "rgba(37,99,235,0.90)",
+          "pixels": 185,
+          "area_km2": 0.0185,
+          "percent": 0.036
+        },
+        {
+          "id": 4,
+          "name": "Outras mudanças espectrais",
+          "color": "rgba(250,204,21,0.82)",
+          "pixels": 4506,
+          "area_km2": 0.4506,
+          "percent": 0.868
+        },
+        {
+          "id": 5,
+          "name": "Solo exposto / possível deslizamento",
+          "color": "rgba(192,38,211,0.90)",
+          "pixels": 589,
+          "area_km2": 0.0589,
+          "percent": 0.113
+        }
+      ],
+      "dndvi_median": -0.0564,
+      "land_fraction_of_valid": 0.9876,
+      "valid_fraction": 0.9255,
+      "bright_fixed_km2": 0.0,
+      "steep": {
+        "limit_deg": 20.0,
+        "changed_percent": 76.65,
+        "area_percent": 11.94
+      },
+      "urban": {
+        "area_km2": 22.304,
+        "percent_of_valid": 42.97,
+        "changed_km2": 0.2757,
+        "changed_percent": 1.236
+      }
+    },
+    "scales": {
+      "dndvi": {
+        "min": -0.5,
+        "max": 0.5,
+        "fade": [
+          0.03,
+          0.15
+        ],
+        "label": "ΔNDVI (depois − antes)",
+        "stops": [
+          [
+            0.0,
+            "rgb(140,81,10)"
+          ],
+          [
+            0.35,
+            "rgb(223,194,125)"
+          ],
+          [
+            0.5,
+            "rgb(245,245,245)"
+          ],
+          [
+            0.65,
+            "rgb(128,205,193)"
+          ],
+          [
+            1.0,
+            "rgb(1,102,94)"
+          ]
+        ],
+        "ticks": [
+          -0.5,
+          0.0,
+          0.5
+        ],
+        "hint": "marrom = perda de vegetação · verde = ganho"
+      },
+      "magnitude": {
+        "min": 0.07201,
+        "max": 0.26318,
+        "threshold": 0.14403,
+        "label": "Magnitude CVA (Δ reflectância)",
+        "stops": [
+          [
+            0.0,
+            "rgb(13,8,135)"
+          ],
+          [
+            0.35,
+            "rgb(126,3,168)"
+          ],
+          [
+            0.65,
+            "rgb(220,57,119)"
+          ],
+          [
+            0.85,
+            "rgb(251,155,6)"
+          ],
+          [
+            1.0,
+            "rgb(240,249,33)"
+          ]
+        ],
+        "ticks": [
+          0.07201,
+          0.14403,
+          0.26318
+        ],
+        "hint": "▲ = limiar de mudança"
+      }
+    },
+    "legend": [
+      {
+        "id": 1,
+        "name": "Perda de vegetação (possível deslizamento)",
+        "color": "rgb(245,130,32)"
+      },
+      {
+        "id": 2,
+        "name": "Solo exposto / entulho em área urbana (possível dano em construções)",
+        "color": "rgb(220,38,38)"
+      },
+      {
+        "id": 3,
+        "name": "Mudança em corpos d'água",
+        "color": "rgb(37,99,235)"
+      },
+      {
+        "id": 4,
+        "name": "Outras mudanças espectrais",
+        "color": "rgb(250,204,21)"
+      },
+      {
+        "id": 5,
+        "name": "Solo exposto / possível deslizamento",
+        "color": "rgb(192,38,211)"
+      }
+    ],
+    "elapsed_s": 50.3,
+    "ndvi_stats_mask": "válidos, sem água",
+    "mean_ndvi_before": 0.3533,
+    "mean_ndvi_after": 0.2791,
+    "median_ndvi_before": 0.3147,
+    "median_ndvi_after": 0.2516,
+    "median_composite": false
+  }
+}

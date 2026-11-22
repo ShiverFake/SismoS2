@@ -1,0 +1,360 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodologia · SismoS2</title>
+  <meta name="description" content="SismoS2 prioriza os quarteirões mais atingidos por terremotos usando imagens gratuitas do Sentinel-2.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  
+  <link rel="stylesheet" href="../static/css/tokens.css">
+  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="../static/css/site.css">
+</head>
+
+<body class=" vitrine">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  
+  
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../" aria-label="SismoS2, início"><svg viewBox="0 0 34 22" aria-hidden="true"><path d="M1 11h7l2-4 3 12 3-17 3 14 2-7 2 2h10" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SismoS2</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" id="nav-toggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Abrir menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Principal">
+        
+        
+        <a href="../">Início</a>
+        
+        
+        
+        
+        
+        <a href="../analises/">Análises</a>
+        
+        
+        
+        <a href="../eventos/">Eventos</a>
+        
+        
+        
+        <a href="../metodologia/" aria-current="page">Metodologia</a>
+        
+        
+        
+        <a href="../sobre/">Sobre</a>
+        
+        
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    
+<div class="container page article-layout">
+  <nav class="toc" aria-label="Índice">
+    <p class="toc-title">Nesta página</p>
+    <ol>
+        <li><a href="#dados">Dados</a></li>
+        <li><a href="#cenas">Seleção das cenas</a></li>
+        <li><a href="#pre-processamento">Pré-processamento</a></li>
+        <li><a href="#cva">Detecção de mudanças (CVA)</a></li>
+        <li><a href="#classificacao">Índices e classificação</a></li>
+        <li><a href="#controles">Controles de qualidade</a></li>
+        <li><a href="#validacao">Validação</a></li>
+        <li><a href="#resultados">Resultados</a></li>
+        <li><a href="#limitacoes">Limitações</a></li>
+    </ol>
+  </nav>
+  <article class="article prose">
+    <h1>Metodologia</h1>
+    <p class="abstract">O SismoS2 compara duas imagens Sentinel-2 da mesma área, antes e depois de um terremoto,
+      e mede a mudança espectral de cada pixel de 10 m. As mudanças viram um ranking de células de 200 m, que
+      indica onde vistoriar primeiro. A capacidade do ranking de separar células danificadas é medida contra mapas
+      de dano oficiais e comparada com anos sem terremoto na mesma área.</p>
+
+
+  <h2 id="dados"><span class="sec-n">1</span>Dados</h2>
+  <p>Imagens <strong>Sentinel-2 nível 2A</strong> (reflectância de superfície, correção atmosférica Sen2Cor),
+  obtidas do catálogo STAC público <em>Earth Search</em> (Element84/AWS) em formato Cloud Optimized GeoTIFF.
+  Apenas a janela da área de interesse é transferida.</p>
+  <table>
+    <tr><th>Banda</th><th>Nome</th><th>λ central</th><th>Resolução</th></tr>
+    <tr><td>B02</td><td>Azul</td><td>490 nm</td><td>10 m</td></tr>
+    <tr><td>B03</td><td>Verde</td><td>560 nm</td><td>10 m</td></tr>
+    <tr><td>B04</td><td>Vermelho</td><td>665 nm</td><td>10 m</td></tr>
+    <tr><td>B08</td><td>Infravermelho próximo</td><td>842 nm</td><td>10 m</td></tr>
+    <tr><td>B11</td><td>SWIR 1</td><td>1610 nm</td><td>20 m → 10 m</td></tr>
+    <tr><td>B12</td><td>SWIR 2</td><td>2190 nm</td><td>20 m → 10 m</td></tr>
+    <tr><td>SCL</td><td>Classificação da cena</td><td>—</td><td>20 m</td></tr>
+  </table>
+
+  <h2 id="cenas"><span class="sec-n">2</span>Seleção das cenas</h2>
+  <p>Para cada período (antes/depois) buscam-se cenas com cobertura de nuvens abaixo do limite.
+  As <strong>5 cenas mais próximas da data do terremoto</strong> (as mais recentes no “antes” e as mais antigas
+  no “depois”) são avaliadas: para cada uma, a banda <strong>SCL</strong> é lida e calcula-se a fração de pixels
+  limpos <em>dentro do retângulo</em>. Escolhe-se a de <strong>maior área limpa</strong> (empates de menos de
+  1 ponto percentual ficam com a mais próxima do evento). O <code>eo:cloud_cover</code> do catálogo não é usado
+  para escolher porque vale para o tile inteiro (~110 × 110 km).</p>
+  <p><strong>Máscara de nuvem:</strong> são inválidas as classes SCL 0 (sem dado), 1 (saturado), 3 (sombra),
+  8/9 (nuvem), 10 (cirrus) e 11 (neve). Nuvem e sombra são <strong>dilatadas em 4 pixels</strong> (~40 m),
+  porque a SCL deixa de fora a névoa fina na borda das nuvens, que aparece como falsa mudança.</p>
+  <p><strong>Composição por mediana (opcional):</strong> carrega até 3 das cenas avaliadas (mesmo tile) e calcula,
+  banda a banda, a mediana por pixel ignorando os pixels mascarados (<code>np.nanmedian</code>). Um pixel é válido
+  se estiver limpo em pelo menos uma cena. A mediana preenche buracos de nuvem e reduz ruído, ao custo de
+  misturar datas um pouco mais distantes do evento.</p>
+  <p>A cena “antes” é escolhida primeiro; a cena “depois” é então buscada <strong>no mesmo tile MGRS</strong>
+  e, de preferência, <strong>na mesma órbita relativa</strong>. Áreas na divisa de zonas UTM (como Antakya,
+  coberta pelos tiles 36SYF e 37SBA) aparecem em dois tiles; misturar tiles ou órbitas muda a reamostragem e
+  o ângulo de visada, deslocando levemente as imagens — o que faz a malha de ruas e as bordas “acenderem”
+  no CVA. Mudança real aparece concentrada; desalinhamento aparece espalhado seguindo as bordas.</p>
+
+  <h2 id="pre-processamento"><span class="sec-n">3</span>Pré-processamento</h2>
+  <ul>
+    <li>Reprojeção das duas cenas para a mesma grade (EPSG:3857, ~10 m no terreno), garantindo
+    co-registro pixel a pixel e sobreposição exata no Leaflet.</li>
+    <li>Conversão para reflectância: <code>ρ = DN · 0,0001 + offset</code>. Desde a baseline 04.00 (2022) a ESA
+    soma 1000 aos DN (offset −0,1). O catálogo Earth Search já remove esse offset dos arquivos e sinaliza com
+    <code>earthsearch:boa_offset_applied = true</code>; nesse caso o offset <strong>não</strong> é aplicado de novo
+    (aplicá-lo duas vezes zera o vermelho em áreas escuras e leva o NDVI a ~1). Sem essa indicação, aplica-se −0,1
+    quando a baseline é ≥ 04.00. A regra usada aparece no cartão de cada cena.</li>
+    <li>Máscara de validade = pixels limpos nas duas datas. Na camada “Nuvem / sem dado” esses pixels aparecem
+    em hachura cinza.</li>
+    <li>Estatísticas de NDVI (médias, medianas, ΔNDVI mediano) usam só pixels de <strong>terra</strong>: ficam de
+    fora a água da SCL (classe 6) e os pixels com NDWI &gt; 0 em alguma data. A classe “Mudança em corpos d'água”
+    continua sendo detectada normalmente.</li>
+    <li><strong>Avisos de qualidade</strong> aparecem no resultado quando: menos de 50% do retângulo é válido;
+    as cenas são de tiles diferentes; o intervalo entre as imagens passa de 60 dias; ou o ΔNDVI mediano da área
+    toda é menor que −0,15. Este último indica efeito sazonal (a vegetação toda mudou), e a correção sugerida é o
+    <strong>par de aniversário</strong>: período “antes” com as mesmas datas do “depois”, um ano antes.</li>
+    <li>Normalização radiométrica relativa: cada banda da imagem “antes” é ajustada à média e ao
+    desvio-padrão da imagem “depois”: <code>x' = (x − μ<sub>a</sub>) / σ<sub>a</sub> · σ<sub>d</sub> + μ<sub>d</sub></code>.</li>
+  </ul>
+
+  <h2 id="cva"><span class="sec-n">4</span>Change Vector Analysis (CVA)</h2>
+  <p>Para cada pixel, a magnitude da mudança é a norma euclidiana do vetor diferença nas 6 bandas:</p>
+  <p class="formula">M = √ Σ<sub>b</sub> (ρ<sub>b,depois</sub> − ρ<sub>b,antes</sub>)²</p>
+  <p>O limiar é escolhido automaticamente: <strong>μ + k·σ</strong> da magnitude (padrão k = 2) ou
+  pelo método de <strong>Otsu</strong>. Regiões conectadas (vizinhança 8) menores que N pixels são descartadas.</p>
+
+  <h2 id="classificacao"><span class="sec-n">5</span>Índices espectrais e classificação</h2>
+  <ul>
+    <li><strong>NDVI</strong> = (NIR − R) / (NIR + R) — vigor da vegetação</li>
+    <li><strong>NDWI</strong> = (G − NIR) / (G + NIR) — água</li>
+    <li><strong>NDBI</strong> = (SWIR1 − NIR) / (SWIR1 + NIR) — áreas construídas / solo</li>
+    <li><strong>BSI</strong> = ((SWIR1 + R) − (NIR + B)) / ((SWIR1 + R) + (NIR + B)) — solo exposto</li>
+  </ul>
+  <p>Os pixels marcados como mudança pela CVA são classificados por regras na diferença (depois − antes):</p>
+  <ol>
+    <li><span class="dot" style="background:#2563eb"></span> <strong>Água</strong>: NDWI &gt; 0 em alguma data e |ΔNDWI| &gt; 0,15.</li>
+    <li><span class="dot" style="background:#f58220"></span> <strong>Perda de vegetação</strong>: NDVI<sub>antes</sub> &gt; 0,3 e ΔNDVI &lt; −0,15 — típico de deslizamentos.</li>
+    <li><span class="dot" style="background:#dc2626"></span> <strong>Solo exposto/entulho</strong>: ΔBSI &gt; 0,05 ou ΔNDBI &gt; 0,05 — típico de escombros em área urbana.</li>
+    <li><span class="dot" style="background:#facc15"></span> <strong>Outras mudanças</strong>: demais pixels alterados.</li>
+  </ol>
+
+  <h2 id="controles"><span class="sec-n">6</span>Controles de qualidade adicionais</h2>
+  <ul>
+    <li><strong>Rocha clara × nuvem:</strong> um pixel marcado como nuvem (SCL 8/9) em <em>todas</em> as cenas das
+    <em>duas</em> datas e com B11 &gt; 0,3 em todas é tratado como superfície clara fixa (pedreira, calcário) e volta
+    a ser válido — antes da dilatação de 4 px, para não gerar borda. Nuvem de verdade raramente fica no mesmo pixel
+    em datas diferentes.</li>
+    <li><strong>Correção topográfica (C-correction):</strong> declividade e aspecto vêm do Copernicus DEM GLO-30
+    (Earth Search, coleção <code>cop-dem-glo-30</code>), reamostrado para a grade. Para cada cena, com o sol dela
+    (<code>view:sun_azimuth</code>, <code>view:sun_elevation</code>): cos(i) = cos(z)·cos(s) + sin(z)·sin(s)·cos(φ − a);
+    regressão ρ = m·cos(i) + b por banda; c = b/m; ρ' = ρ·(cos z + c)/(cos i + c). Na composição por mediana a
+    correção é feita em cada cena antes da mediana. A banda só é corrigida se a correlação r(cos i, ρ) ≥ 0,2 —
+    o L2A já sai do Sen2Cor com correção de terreno, e em muitas bandas sobra pouca relação; forçar a correção
+    nesses casos só acrescentaria ruído. O resumo mostra quantas bandas foram corrigidas e a % da mudança em
+    declividade &gt; 20°.</li>
+    <li><strong>WorldCover:</strong> o ESA WorldCover 2021 (10 m) é lido direto do bucket público (tiles de 3°,
+    nomeados pelo canto inferior esquerdo, ex.: N36E036; áreas que cruzam tiles leem todos). O aumento de solo
+    exposto é classificado como “possível dano em construções” em área construída, definida como WorldCover classe 50
+    <strong>ou</strong> dentro de um prédio do OpenStreetMap ou a até 10 m dele; fora dela vira “Solo exposto /
+    possível deslizamento”. O OSM entra porque o WorldCover não enxerga vilarejos de taipa (ver
+    <a href="#limitacoes">Limitações</a>).</li>
+    <li><strong>Áreas de controle (vários anos):</strong> a mesma análise repetida em anos sem terremoto (ex.: 2020,
+    2021 e 2022), no mesmo tile MGRS e de preferência na mesma órbita. Em cada ano, todas as cenas da mesma janela
+    do calendário do evento (em Antakya, 1/jan a 15/mar) são avaliadas pela SCL e escolhe-se o par que maximiza
+    <code>área válida nas duas − 0,01 × |intervalo − intervalo do evento|</code> (1 ponto percentual de área
+    válida vale 1 dia de diferença).</li>
+    <li><strong>Limiar comum:</strong> o limiar μ + kσ de cada análise marca, por construção, ~3% de qualquer
+    imagem — comparar as porcentagens com limiares próprios diz pouco. Por isso todas as análises (evento e
+    controles) também são reclassificadas com o <em>mesmo</em> limiar: a média dos limiares dos controles (o nível
+    de ruído de um ano normal), na área válida em todas elas. A tabela mostra também o evento reclassificado com o
+    limiar de cada controle e a distribuição da magnitude CVA (média, mediana, p90, p95) na área urbana comum.</li>
+    <li><strong>Escore z:</strong> z = (evento − média dos controles) / desvio-padrão dos controles, na área total e
+    na urbana. Com 2 ou 3 controles o desvio é pouco preciso: |z| &lt; 2 não permite afirmar que o evento está fora
+    da variação normal. Um controle com problema atmosférico (névoa que a SCL não detecta) infla o desvio — vale
+    conferir a cena (nuvem no tile, azul mais alto) antes de interpretar.</li>
+    <li><strong>Névoa e versões de processamento:</strong> para cada data e tile usa-se só o processamento mais
+    recente (o Earth Search tem, para 2015–2021, o original e o reprocessamento da ESA de 2023, com radiometria
+    diferente). Cenas com AOT (aerossol a 550 nm, asset <code>aot</code> do L2A) mediana &gt; 0,25 nos pixels limpos
+    do retângulo são descartadas (<code>MAX_AOT</code> no config.py). Medido em todas as candidatas de 2020–2023:
+    Antakya jan–mar mediana 0,18 (p90 0,29); Atlas ago–out mediana 0,14 (p90 0,26); o limite remove ~14% das
+    cenas (névoa/poeira) e mantém as cenas dos eventos (0,08–0,21).</li>
+    <li><strong>Evento × controles na quadrícula:</strong> a grade de cada controle é avaliada contra a MESMA
+    referência de dano, nas MESMAS células (só pixels válidos em todas as análises). A diferença de AUC
+    evento − controle é testada com o teste de DeLong pareado (e conferida por bootstrap pareado das células).
+    Se o evento não supera os controles, o sistema estaria “acertando” por características fixas do lugar.</li>
+    <li><strong>Regra objetiva dos controles:</strong> só vale um par com ≥ 70% do retângulo válido nas duas datas
+    (<code>MIN_CONTROL_VALID</code> no config.py). Ano sem par válido fica registrado com o motivo e o sistema tenta o
+    ano anterior (até 2017) até completar 3 controles — nenhum ano é excluído à mão.</li>
+    <li><strong>Teste principal e múltiplas comparações:</strong> a comparação principal, definida antes de olhar os
+    resultados, é <em>evento × média dos controles com células de 200 m</em> (p do DeLong sem correção). As demais
+    (tamanhos × controles × locais) são exploratórias e recebem correção de Holm.</li>
+    <li><strong>Prioridade de vistoria:</strong> ranking das células de 200 m pela % de pixels com mudança, em faixas
+    (top 10%, 10–20%, 20–30%, demais). É uma ordem relativa dentro do retângulo, não um diagnóstico de dano. Só
+    entram células com construções: pelo menos 1 prédio do OpenStreetMap <strong>ou</strong> 10% de área construída
+    no WorldCover; as outras aparecem como “sem construções”, e as com mais de 50% de água ficam de fora.</li>
+    <li><strong>Controle suspeito:</strong> o sistema sinaliza (sem excluir) o controle com nuvem no tile &gt; 50% em
+    alguma cena, área válida &lt; 60% do retângulo ou magnitude mediana &gt; 1,5× a das outras análises (um ano sem
+    terremoto deveria ser “quieto”). O usuário pode tirá-lo da média com um clique, escrevendo o motivo, que fica
+    gravado na análise de controle; média, desvio, z, limiar comum e área comum são recalculados só com os
+    controles incluídos. Para o trabalho, relate sempre os dois resultados (com e sem o controle excluído).</li>
+  </ul>
+
+  <h2 id="validacao"><span class="sec-n">7</span>Validação com dados oficiais</h2>
+  <p>As ativações e os produtos de grading vêm da API pública do <strong>Copernicus EMS Rapid Mapping</strong>
+  (página <a href="../eventos/">Eventos</a>). Uma análise criada a partir de uma AOI fica vinculada à ativação: o
+  resultado ganha a camada “Dano oficial” e a validação já vem preenchida. A matriz de confusão também é calculada
+  só para os prédios em área construída (WorldCover classe 50). Positivo = “Destroyed” ou “Damaged”.
+  Ativações anteriores à EMSR656 (como a EMSR648, Turquia 2023) não são públicas nessa API.</p>
+  <p>O mapa de mudanças é comparado com mapas de dano produzidos por fotointérpretes a partir de imagens de
+  altíssima resolução (&lt; 1 m), como os produtos de <em>grading</em> do <strong>Copernicus EMS Rapid
+  Mapping</strong> (ex.: EMSR695 – Marrocos, EMSR798 – Myanmar), que classificam cada edificação afetada
+  em <em>Destroyed</em>, <em>Damaged</em> ou <em>Possibly damaged</em>.</p>
+  <ul>
+    <li><strong>Unidade de avaliação: edificação.</strong> Como o EMS registra apenas os prédios afetados, a
+    população completa de prédios vem do <strong>OpenStreetMap</strong> (Overpass API). Cada ponto do EMS é
+    ligado ao prédio do OSM que o contém ou ao mais próximo a até 10 m; pontos sem prédio no OSM entram como
+    prédios pontuais.</li>
+    <li><strong>Verdade de referência:</strong> positivo = destruído ou danificado; negativo = prédio do OSM
+    dentro da AOI do EMS sem registro de dano. “Possivelmente danificado” é excluído por padrão (opcionalmente
+    contado como dano). Prédios sob nuvem em alguma das datas são excluídos.</li>
+    <li><strong>Previsão:</strong> o prédio é marcado se existe pixel de mudança a uma distância do seu centro
+    ≤ raio equivalente do prédio + tolerância de posição (padrão 10 m ≈ 1 pixel, compatível com o erro de
+    co-registro do Sentinel-2 e com a posição aproximada dos pontos do EMS).</li>
+    <li><strong>Métricas:</strong> a partir da matriz de confusão (VP, FP, FN, VN):
+      precisão = VP/(VP+FP); recall = VP/(VP+FN); F1 = 2·P·R/(P+R);
+      exatidão global = (VP+VN)/N; kappa de Cohen κ = (p<sub>o</sub> − p<sub>e</sub>)/(1 − p<sub>e</sub>),
+      interpretado pela escala de Landis &amp; Koch (1977).</li>
+    <li><strong>Linha de base:</strong> o F1 de um classificador que marca todos os prédios como danificados
+    (= 2p/(1+p), sendo p a prevalência de dano) é mostrado para referência — um método útil precisa superá-lo.</li>
+    <li><strong>Comparação de métodos:</strong> as bandas de cada análise ficam salvas, e a validação reexecuta a
+    detecção com μ + kσ (k = 1; 1,5; 2; 2,5; 3) e Otsu, considerando como dano todas as mudanças ou apenas a
+    classe “solo exposto/entulho”. A tabela pode ser exportada em CSV.</li>
+  </ul>
+  <p>Limitações da validação: o OSM pode estar incompleto ou desatualizado; prédios demolidos/limpos entre o
+  evento e a imagem VHR podem divergir; e a resolução de 10 m faz com que a mudança de um prédio “vaze” para
+  vizinhos próximos, o que eleva os falsos positivos em vilarejos densos.</p>
+
+    <h2 id="resultados"><span class="sec-n">8</span>Resultados dos estudos de caso</h2>
+  <p>As figuras abaixo são geradas pelo próprio sistema quando a validação roda, e são lidas das análises salvas
+  neste servidor. A curva ROC compara a capacidade de ordenar as células de 200 m danificadas no ano do terremoto
+  e nos anos de controle, com as mesmas células e a mesma referência.</p>
+  
+  <figure>
+    <img src="../api/analises/47412403ace4/arquivos/validation_grid_controls_roc.png" alt="Curvas ROC (células de 200 m) do evento e dos controles (Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07))" loading="lazy">
+    <figcaption><b>Figura 1.</b> Curvas ROC (células de 200 m) do evento e dos controles. Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07).</figcaption>
+  </figure>
+  
+  <figure>
+    <img src="../api/analises/47412403ace4/arquivos/validation_grid_200.png" alt="Dispersão % dano × % mudança e curva de triagem (200 m) (Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07))" loading="lazy">
+    <figcaption><b>Figura 2.</b> Dispersão % dano × % mudança e curva de triagem (200 m). Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07).</figcaption>
+  </figure>
+  
+  <figure>
+    <img src="../api/analises/47412403ace4/arquivos/validation_neighborhood.png" alt="Recall e alarme falso pela distância ao prédio destruído mais próximo (Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07))" loading="lazy">
+    <figcaption><b>Figura 3.</b> Recall e alarme falso pela distância ao prédio destruído mais próximo. Marrocos 2023 – Talat N&#39;Yaaqoub (EMSR695, AOI 07).</figcaption>
+  </figure>
+  
+  <figure>
+    <img src="../api/analises/9ea9d74fe815/arquivos/validation_grid_controls_roc.png" alt="Curvas ROC (células de 200 m) do evento e dos controles (Antakya 2023 – com correção topográfica)" loading="lazy">
+    <figcaption><b>Figura 4.</b> Curvas ROC (células de 200 m) do evento e dos controles. Antakya 2023 – com correção topográfica.</figcaption>
+  </figure>
+  
+  <figure>
+    <img src="../api/analises/9ea9d74fe815/arquivos/validation_grid_200.png" alt="Dispersão % dano × % mudança e curva de triagem (200 m) (Antakya 2023 – com correção topográfica)" loading="lazy">
+    <figcaption><b>Figura 5.</b> Dispersão % dano × % mudança e curva de triagem (200 m). Antakya 2023 – com correção topográfica.</figcaption>
+  </figure>
+  
+  <figure>
+    <img src="../api/analises/9ea9d74fe815/arquivos/validation_neighborhood.png" alt="Recall e alarme falso pela distância ao prédio destruído mais próximo (Antakya 2023 – com correção topográfica)" loading="lazy">
+    <figcaption><b>Figura 6.</b> Recall e alarme falso pela distância ao prédio destruído mais próximo. Antakya 2023 – com correção topográfica.</figcaption>
+  </figure>
+  
+
+  <h2 id="limitacoes"><span class="sec-n">9</span>Limitações</h2>
+  <ul>
+    <li>Resolução de 10 m: edifícios individuais pequenos raramente são detectados; o método indica
+    <em>quarteirões</em> danificados, deslizamentos e alterações de terreno.</li>
+    <li>Imagens ópticas dependem de céu limpo; cenas pós-evento podem estar distantes no tempo.</li>
+    <li>Mudanças sazonais, agrícolas, obras e diferenças de ângulo solar também geram falsos positivos —
+    a normalização e a escolha de datas próximas reduzem, mas não eliminam, esse efeito.</li>
+    <li>Para validação, compare com mapas de dano do Copernicus EMS ou UNOSAT.</li>
+    <li><strong>Área construída em vilarejos de taipa:</strong> o ESA WorldCover marca só 0,51% da AOI do Marrocos
+    (EMSR695, AOI 07) como construída. As casas de taipa e pedra têm a cor e a textura do solo em volta e são
+    confundidas com solo exposto. Usando só o WorldCover, 23 das 1.849 células ficariam no ranking de prioridade, e o
+    entulho desses vilarejos seria lido como deslizamento. Por isso a regra combina as duas fontes: WorldCover
+    <strong>ou</strong> prédios do OpenStreetMap (222 células no ranking). O OSM, por sua vez, depende de
+    voluntários: onde os prédios não foram mapeados, a área continua invisível para a regra.</li>
+  </ul>
+  </article>
+</div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <h2>SismoS2</h2>
+        <p>Detecção de mudanças após terremotos com imagens Sentinel-2. Trabalho acadêmico; os mapas indicam onde olhar
+          primeiro e não substituem a vistoria em campo.</p>
+      </div>
+      <div>
+        <h2>Fontes de dados</h2>
+        <ul>
+          <li><a href="https://earth-search.aws.element84.com/v1" rel="noopener">Sentinel-2 L2A (Earth Search, Element84/AWS)</a></li>
+          <li><a href="https://rapidmapping.emergency.copernicus.eu/" rel="noopener">Copernicus EMS Rapid Mapping</a></li>
+          <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" rel="noopener">USGS Earthquake Hazards</a></li>
+          <li><a href="https://esa-worldcover.org/" rel="noopener">ESA WorldCover 2021</a></li>
+          <li><a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap e HOT</a></li>
+          <li><a href="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model" rel="noopener">Copernicus DEM GLO-30</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>window.SISMOS2_STATIC = { base: "../" };</script>
+  <script src="../static/js/common.js"></script>
+  <script>
+    (function () {   // menu do celular
+      const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
+      t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
+    })();
+  </script>
+  
+<script>
+  (function () {   // destaca no índice a seção visível
+    const links = [...document.querySelectorAll(".toc a")];
+    const byId = Object.fromEntries(links.map((a) => [a.hash.slice(1), a]));
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        links.forEach((a) => a.classList.remove("active"));
+        byId[e.target.id] && byId[e.target.id].classList.add("active");
+      });
+    }, { rootMargin: "-80px 0px -70% 0px" });
+    document.querySelectorAll(".article h2[id]").forEach((h) => obs.observe(h));
+  })();
+</script>
+
+</body>
+</html>
