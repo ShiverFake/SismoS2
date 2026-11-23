@@ -223,11 +223,12 @@ def test_events_page_and_apis(client):
     e = client.get("/api/eventos/ems").get_json()
     assert [a["code"] for a in e["activations"]] == ["EMSR934"]
     assert e["errors"]
-    d = client.get("/api/eventos/ems/EMSR695").get_json()
+    from app.controllers import events_controller
+    with client.application.app_context():
+        repo = events_controller.ems_repository(client.application.config)
+        d = events_controller._with_links(repo.get_activation("EMSR695"))
     aoi7 = next(a for a in d["aois"] if a["number"] == 7)
     assert "ems=EMSR695" in aoi7["analyze_url"] and "aoi=7" in aoi7["analyze_url"]
-    r = client.get("/api/eventos/ems/EMSR648")
-    assert r.status_code == 403 and r.get_json()["not_public"]
     g = client.get("/api/eventos/ems/EMSR695/aoi/7/grading.geojson").get_json()
     assert len(g["features"]) == 3
 

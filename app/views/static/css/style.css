@@ -2,7 +2,6 @@
 .muted { color: var(--muted); }
 .hint { color: var(--muted); font-size: .82rem; margin: 4px 0 0; min-height: 1em; }
 .hint.warn { color: #fbbf24; }
-.back { font-size: .85rem; text-decoration: none; }
 
 form label { display: block; font-size: .82rem; color: var(--muted); margin-top: 10px; }
 input, select {
@@ -16,7 +15,6 @@ legend { font-size: .82rem; color: var(--text); padding: 0 4px; }
 details { margin-top: 14px; }
 summary { cursor: pointer; color: var(--muted); font-size: .88rem; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 8px; }
 
 
 
@@ -153,7 +151,6 @@ table.ctl-table tr.agg td { border-top: 1px solid var(--border); font-weight: 60
 .btn.danger-solid:disabled { opacity: .6; }
 
 /* ---- validação */
-.sidebar h3 { font-size: .85rem; margin: 16px 0 6px; font-weight: 600; }
 .small { font-size: .8rem; }
 #val-bar { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width .4s; }
 .metric-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
@@ -189,8 +186,6 @@ main:has(.prose) { overflow-y: auto; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
 
 @media (max-width: 860px) {
-  .layout { flex-direction: column-reverse; }
-  .sidebar { width: 100%; border-right: 0; max-height: 55vh; }
   .map, .map-area { min-height: 45vh; }
 }
 

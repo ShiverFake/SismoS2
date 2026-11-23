@@ -13,7 +13,6 @@ from PIL import Image
 
 from app.models.analysis import Analysis, AnalysisRepository
 from app.models.change_detection import CHANGE_CLASS_IDS, NODATA, remove_small_regions
-from app.models.quality import anniversary_dates
 
 COMPARISON_FILE = "control_comparison.json"
 COMPARISON_VERSION = 4
@@ -58,23 +57,6 @@ def build_year_control(event: Analysis, year: int, min_valid: float = 0.0) -> An
         topo_correction=event.topo_correction and "topo" in r,
         event_id=event.event_id, control_of=event.id, control_year=year,
         preferred_tile=(r.get("before") or {}).get("tile"), pair_window=window,
-    )
-
-
-def build_control(event: Analysis) -> Analysis:
-    """Controle simples (versão anterior): os dois períodos deslocados 1 ano para trás."""
-    before = anniversary_dates(event.before_start, event.before_end)
-    after = anniversary_dates(event.after_start, event.after_end)
-    return Analysis.new(
-        name=f"{event.name} – controle (ano anterior)",
-        bbox=list(event.bbox),
-        before_start=before["before_start"], before_end=before["before_end"],
-        after_start=after["before_start"], after_end=after["before_end"],
-        max_cloud=event.max_cloud, threshold_method=event.threshold_method, k=event.k,
-        min_region_px=event.min_region_px, median_composite=event.median_composite,
-        topo_correction=event.topo_correction and "topo" in (event.result or {}),
-        event_id=event.event_id, control_of=event.id,
-        preferred_tile=((event.result or {}).get("before") or {}).get("tile"),
     )
 
 
@@ -201,37 +183,6 @@ def multi_control_stats(event: dict, controls: List[dict], urban: Optional[np.nd
         "both_changed_km2": round(int(both_any.sum()) * km2, 4),
         "both_percent_of_event_change": _pct(int(both_any.sum()), int(ev_own.sum())),
         "_both": both_any,
-    }
-
-
-def overlap_stats(event_classes: np.ndarray, control_classes: np.ndarray, pixel_area_m2: float,
-                  urban: Optional[np.ndarray] = None) -> dict:
-    """Comparação par a par (um controle), com o limiar próprio de cada análise."""
-    common = (event_classes != NODATA) & (control_classes != NODATA)
-    ev = np.isin(event_classes, CHANGE_CLASS_IDS) & common
-    ct = np.isin(control_classes, CHANGE_CLASS_IDS) & common
-    both = ev & ct
-    n_common, n_ev = int(common.sum()), int(ev.sum())
-    km2 = pixel_area_m2 / 1e6
-    out_urban = {}
-    if urban is not None:
-        u = urban & common
-        n_u = int(u.sum())
-        out_urban = {"urban_common_km2": round(n_u * km2, 3),
-                     "event_urban_changed_percent": _pct(int((ev & u).sum()), n_u),
-                     "control_urban_changed_percent": _pct(int((ct & u).sum()), n_u)}
-    return {
-        **out_urban,
-        "common_valid_km2": round(n_common * km2, 3),
-        "event_changed_km2": round(n_ev * km2, 4),
-        "event_changed_percent": _pct(n_ev, n_common),
-        "control_changed_km2": round(int(ct.sum()) * km2, 4),
-        "control_changed_percent": _pct(int(ct.sum()), n_common),
-        "both_changed_km2": round(int(both.sum()) * km2, 4),
-        "both_percent_of_event_change": _pct(int(both.sum()), n_ev),
-        "event_only_km2": round(int((ev & ~ct).sum()) * km2, 4),
-        "excess_percent_points": round(_pct(n_ev, n_common) - _pct(int(ct.sum()), n_common), 3),
-        "_both": both,
     }
 
 

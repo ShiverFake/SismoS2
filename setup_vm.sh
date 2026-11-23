@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Instala dependências e cria o ambiente virtual na VM
+# Instala as dependências e cria o ambiente virtual (Ubuntu/Debian)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -12,7 +12,7 @@ fi
 python3 -m venv .venv
 . .venv/bin/activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt
 
 echo ">> Rodando testes"
 python -m pytest -q

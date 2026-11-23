@@ -1,4 +1,4 @@
-"""Ponto de entrada: python run.py -> http://<ip-da-vm>:5000"""
+"""Ponto de entrada: python run.py e acesse http://localhost:5000"""
 import logging
 import os
 

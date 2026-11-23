@@ -9,13 +9,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import numpy as np
-import rasterio
 
 from app.models import renderer
 from app.models.analysis import Analysis, AnalysisRepository
-from app.models.change_detection import CLASSES, NODATA, ChangeParams, compute_statistics, detect_changes
+from app.models.change_detection import CLASSES, ChangeParams, compute_statistics, detect_changes
 from app.models.landcover import BUILT_UP, read_worldcover
-from app.models.buildings import osm_footprint_mask, osm_pixels, save_buildings
+from app.models.buildings import osm_footprint_mask, osm_pixels, save_buildings, urban_mask
 from app.models.water import save_water, water_mask
 from app.models.quality import land_mask, quality_warnings, urban_stats
 from app.models.control import choose_control_pair
@@ -201,9 +200,7 @@ class ChangeDetectionService:
                 except Exception as exc:  # noqa: BLE001
                     log.warning("Prédios do OSM indisponíveis: %s", exc)
                     notes.append("Prédios do OpenStreetMap indisponíveis: a área construída veio só do WorldCover.")
-            class_urban = urban
-            if osm_mask is not None:
-                class_urban = osm_mask if urban is None else (urban | osm_mask)
+            class_urban = urban_mask({"built": urban, "osm_mask": osm_mask})
             result = detect_changes(before.bands, after.bands, valid, params, urban=class_urban)
             stats = compute_statistics(result, grid.pixel_area_m2)
 
@@ -287,30 +284,6 @@ class ChangeDetectionService:
         finally:
             analysis.finished_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
             self.repository.save(analysis)
-
-
-def rerender_layers(repository: AnalysisRepository, analysis: Analysis) -> bool:
-    """Regera dndvi.png/magnitude.png e as escalas a partir dos GeoTIFFs (sem baixar imagens)."""
-    if analysis.status != "done" or not analysis.result:
-        return False
-    out_dir = repository.directory(analysis.id)
-    paths = {n: os.path.join(out_dir, n) for n in ("dndvi.tif", "magnitude.tif", "change_classes.tif")}
-    if not all(os.path.exists(p) for p in paths.values()):
-        return False
-    with rasterio.open(paths["dndvi.tif"]) as src:
-        dndvi = src.read(1)
-    with rasterio.open(paths["magnitude.tif"]) as src:
-        magnitude = src.read(1)
-    with rasterio.open(paths["change_classes.tif"]) as src:
-        classes = src.read(1)
-    renderer.save_change_map(classes, os.path.join(out_dir, "change.png"))
-    renderer.save_mask_hatch(classes == NODATA, os.path.join(out_dir, "mask.png"))
-    threshold = float(analysis.result["statistics"]["cva_threshold"])
-    dndvi_scale = renderer.save_dndvi(dndvi, os.path.join(out_dir, "dndvi.png"))
-    mag_scale = renderer.save_magnitude(magnitude, os.path.join(out_dir, "magnitude.png"), threshold)
-    analysis.result["scales"] = _clean(renderer.legend_scales(dndvi_scale, mag_scale))
-    repository.save(analysis)
-    return True
 
 
 def _nanmean(values: np.ndarray):

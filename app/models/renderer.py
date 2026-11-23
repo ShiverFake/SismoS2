@@ -122,3 +122,40 @@ def save_geotiffs(result: ChangeResult, grid, out_dir: str) -> None:
         with rasterio.open(os.path.join(out_dir, name), "w",
                            dtype="float32", nodata=float("nan"), **profile) as dst:
             dst.write(arr.astype(np.float32), 1)
+
+
+def priority_rgba(result: dict, folder: str, alpha: int = 150) -> np.ndarray:
+    """Faixas top 10%, 10–20% e 20–30% pintadas por célula de 200 m (o resto fica transparente)."""
+    from app.models.buildings import load_buildings
+    from app.models.priority import BANDS, EMPTY, PRIORITY_CELL_M, priority_cells
+    from app.models.water import load_water
+
+    with rasterio.open(os.path.join(folder, "change_classes.tif")) as src:
+        classes = src.read(1)
+    cell_px = max(1, int(round(PRIORITY_CELL_M / float(result["grid"]["ground_resolution_m"]))))
+    cells = priority_cells(classes, cell_px, load_water(folder, classes.shape), load_buildings(folder, classes.shape))
+    h, w = classes.shape
+    colors = {key: color for _, key, _, color in BANDS}
+    overlay = np.zeros((h, w, 4), np.uint8)
+    for r, c, band in zip(cells["row"], cells["col"], cells["band"]):
+        if band == "rest":
+            continue
+        rgb = tuple(int(colors[band][i:i + 2], 16) for i in (1, 3, 5))
+        overlay[r * cell_px:(r + 1) * cell_px, c * cell_px:(c + 1) * cell_px] = (*rgb, alpha)
+    grey = tuple(int(EMPTY[2][i:i + 2], 16) for i in (1, 3, 5))
+    for r, c in zip(cells["empty"]["row"], cells["empty"]["col"]):
+        overlay[r * cell_px:(r + 1) * cell_px, c * cell_px:(c + 1) * cell_px] = (*grey, 46)
+    return overlay
+
+
+def save_priority_png(result: dict, folder: str, out: str) -> None:
+    """Camada de prioridade com fundo transparente, na grade da análise."""
+    Image.fromarray(priority_rgba(result, folder, alpha=165), "RGBA").save(out, optimize=True)
+
+
+def save_thumbnail(result: dict, folder: str, out: str, width: int = 640) -> None:
+    """Miniatura: imagem 'depois' com as faixas de prioridade por cima."""
+    base = Image.open(os.path.join(folder, "after.png")).convert("RGBA")
+    img = Image.alpha_composite(base, Image.fromarray(priority_rgba(result, folder), "RGBA"))
+    img = img.resize((width, max(1, int(img.height * width / img.width))), Image.LANCZOS).convert("RGB")
+    img.save(out, optimize=True)

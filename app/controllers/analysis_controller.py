@@ -134,19 +134,6 @@ def _validation_error(exc):
     return jsonify(error=str(exc)), 400
 
 
-@api_bp.get("/terremotos")
-def list_earthquakes():
-    return jsonify([e.to_dict() for e in EarthquakeRepository().all()])
-
-
-@api_bp.get("/analises")
-def list_analyses():
-    return jsonify([
-        {k: a.to_dict()[k] for k in ("id", "name", "status", "progress", "created_at", "bbox")}
-        for a in _repo().list()
-    ])
-
-
 @api_bp.post("/analises")
 def create_analysis():
     data = request.get_json(silent=True) or {}

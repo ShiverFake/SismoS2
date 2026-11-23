@@ -34,7 +34,6 @@ class EmsAoi:
     gra_download: Optional[str] = None
     gra_version: Optional[int] = None
     gra_image: Optional[str] = None
-    gra_stats: dict = field(default_factory=dict)
     gra_extent_wkt: Optional[str] = None
 
     @property
@@ -57,13 +56,9 @@ class EmsActivation:
     name: str
     category: str
     event_time: str
-    activation_time: Optional[str]
     closed: bool
     countries: List[str]
     centroid: Optional[List[float]]
-    n_aois: int = 0
-    n_products: int = 0
-    report_link: Optional[str] = None
     aois: List[EmsAoi] = field(default_factory=list)
 
     @property
@@ -89,16 +84,13 @@ def _countries(raw) -> List[str]:
 
 def parse_list_item(r: dict) -> EmsActivation:
     return EmsActivation(code=r["code"], name=r.get("name", ""), category=r.get("category", ""),
-                         event_time=r.get("eventTime", ""), activation_time=r.get("activationTime"),
+                         event_time=r.get("eventTime", ""),
                          closed=bool(r.get("closed")), countries=_countries(r.get("countries")),
-                         centroid=_point(r.get("centroid")), n_aois=int(r.get("n_aois") or 0),
-                         n_products=int(r.get("n_products") or 0))
+                         centroid=_point(r.get("centroid")))
 
 
 def parse_detail(r: dict) -> EmsActivation:
     act = parse_list_item(r)
-    act.report_link = r.get("reportLink")
-    act.n_aois = len(r.get("aois") or [])
     for a in r.get("aois") or []:
         gra = sorted([p for p in a.get("products") or [] if p.get("type") == "GRA" and p.get("downloadPath")],
                      key=lambda p: p.get("monitoringNumber") or 0)
@@ -109,9 +101,7 @@ def parse_detail(r: dict) -> EmsActivation:
             gra_download=latest["downloadPath"] if latest else None,
             gra_version=((latest or {}).get("version") or {}).get("number"),
             gra_image=f"{img[0].get('sensorName', '')} {str(img[0].get('acquisitionTime', ''))[:10]}".strip() or None,
-            gra_stats=(latest or {}).get("stats") or {},
             gra_extent_wkt=(latest or {}).get("extent")))
-    act.n_products = sum(1 for a in act.aois if a.gra_download)
     return act
 
 

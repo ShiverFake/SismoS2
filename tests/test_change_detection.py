@@ -146,7 +146,6 @@ def test_magnitude_layer_transparent_below_half_threshold(tmp_path):
 
 
 def test_pixel_probe(tmp_path):
-    import json as _json
     import rasterio
     from rasterio.transform import from_origin
     from app.models.pixel_probe import probe

@@ -82,16 +82,6 @@ def list_activations():
                    note="A API pública do Copernicus EMS só lista ativações a partir da EMSR656.")
 
 
-@events_bp.get("/api/eventos/ems/<code>")
-def activation_detail(code: str):
-    try:
-        return jsonify(_with_links(ems_repository(current_app.config).get_activation(code)))
-    except EmsNotPublic as exc:
-        return jsonify(error=str(exc), not_public=True), 403
-    except (HttpError, EmsError) as exc:
-        return jsonify(error=str(exc)), 502
-
-
 @events_bp.get("/api/eventos/ems/<code>/aoi/<int:aoi>/grading.geojson")
 def grading(code: str, aoi: int):
     """Prédios do produto de grading (GRA) com o grau de dano — camada "Dano oficial"."""

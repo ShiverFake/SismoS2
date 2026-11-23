@@ -6,17 +6,16 @@ import os
 from typing import List, Optional
 
 import numpy as np
-import rasterio
 from flask import Blueprint, abort, current_app, redirect, render_template, request, send_file, url_for
-from PIL import Image
 
 from app.models.analysis import Analysis, AnalysisRepository
 from app.models.control import find_controls
 from app.models.earthquake import EarthquakeRepository
-from app.models.buildings import BUILDINGS_FILE, ensure_buildings, load_buildings
-from app.models.priority import BANDS, EMPTY, PRIORITY_CELL_M, priority_cells
+from app.models.buildings import BUILDINGS_FILE, ensure_buildings
+from app.models.priority import BANDS
 from app.models.reference import source_label
-from app.models.water import WATER_FILE, load_water
+from app.models.renderer import save_priority_png, save_thumbnail
+from app.models.water import WATER_FILE
 
 main_bp = Blueprint("main", __name__)
 
@@ -65,10 +64,6 @@ def _validation(repo: AnalysisRepository, a: Analysis) -> Optional[dict]:
     with open(path, encoding="utf-8") as fh:
         v = json.load(fh)
     return v if v.get("status") == "done" else None
-
-
-def _valid_controls(repo: AnalysisRepository, a: Analysis) -> List[Analysis]:
-    return [c for c in find_controls(repo, a) if c.status == "done" and not c.control_excluded]
 
 
 def analysis_card(repo: AnalysisRepository, a: Analysis) -> dict:
@@ -256,46 +251,13 @@ def _cached_png(analysis_id: str, filename: str, render) :
 @main_bp.route("/analise/<analysis_id>/miniatura.png")
 def thumbnail(analysis_id: str):
     """Miniatura: imagem 'depois' com as faixas de prioridade de vistoria (células de 200 m) por cima."""
-    return _cached_png(analysis_id, THUMB_FILE, _render_thumbnail)
+    return _cached_png(analysis_id, THUMB_FILE, lambda a, folder, out: save_thumbnail(a.result, folder, out, THUMB_W))
 
 
 @main_bp.route("/analise/<analysis_id>/prioridade.png")
 def priority_png(analysis_id: str):
     """Só as faixas de prioridade (fundo transparente), na grade da análise: vai por cima da imagem 'depois'."""
-    return _cached_png(analysis_id, PRIORITY_PNG, _render_priority_png)
-
-
-def _priority_rgba(a: Analysis, folder: str, alpha: int = 150) -> np.ndarray:
-    """Faixas top 10%, 10–20% e 20–30% pintadas por célula de 200 m (o resto fica transparente)."""
-    with rasterio.open(os.path.join(folder, "change_classes.tif")) as src:
-        classes = src.read(1)
-    grid = a.result["grid"]
-    cell_px = max(1, int(round(PRIORITY_CELL_M / float(grid["ground_resolution_m"]))))
-    cells = priority_cells(classes, cell_px, load_water(folder, classes.shape), load_buildings(folder, classes.shape))
-    h, w = classes.shape
-    colors = {key: color for _, key, _, color in BANDS}
-    overlay = np.zeros((h, w, 4), np.uint8)
-    for r, c, band in zip(cells["row"], cells["col"], cells["band"]):
-        if band == "rest":
-            continue
-        rgb = tuple(int(colors[band][i:i + 2], 16) for i in (1, 3, 5))
-        overlay[r * cell_px:(r + 1) * cell_px, c * cell_px:(c + 1) * cell_px] = (*rgb, alpha)
-    grey = tuple(int(EMPTY[2][i:i + 2], 16) for i in (1, 3, 5))
-    for r, c in zip(cells["empty"]["row"], cells["empty"]["col"]):
-        overlay[r * cell_px:(r + 1) * cell_px, c * cell_px:(c + 1) * cell_px] = (*grey, 46)
-    return overlay
-
-
-def _render_priority_png(a: Analysis, folder: str, out: str) -> None:
-    Image.fromarray(_priority_rgba(a, folder, alpha=165), "RGBA").save(out, optimize=True)
-
-
-def _render_thumbnail(a: Analysis, folder: str, out: str) -> None:
-    base = Image.open(os.path.join(folder, "after.png")).convert("RGBA")
-    img = Image.alpha_composite(base, Image.fromarray(_priority_rgba(a, folder), "RGBA"))
-    scale = THUMB_W / img.width
-    img = img.resize((THUMB_W, max(1, int(img.height * scale))), Image.LANCZOS).convert("RGB")
-    img.save(out, optimize=True)
+    return _cached_png(analysis_id, PRIORITY_PNG, lambda a, folder, out: save_priority_png(a.result, folder, out))
 
 
 @main_bp.route("/metodologia")

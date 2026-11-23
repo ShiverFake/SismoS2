@@ -68,37 +68,3 @@ def grid_from_result(result: dict):
     (south, west), (north, east) = result["bounds"]
     return Grid(g.get("crs", "EPSG:3857"), Affine(*g["transform"]), int(g["width"]), int(g["height"]),
                 (west, south, east, north), float(g["ground_resolution_m"]))
-
-
-def rebuild_water(folder: str, result: dict, stac_url: str, collection: str) -> dict:
-    """Relê a SCL das cenas usadas (antes e depois) e o WorldCover; grava water.npz."""
-    from pystac_client import Client
-    from rasterio.enums import Resampling
-
-    from app.models.landcover import read_worldcover
-    from app.models.sentinel import SentinelRepository
-
-    grid = grid_from_result(result)
-    shape = (grid.height, grid.width)
-    ids = [s["item_id"] for key in ("before", "after") for s in (result.get(key) or {}).get("scenes", [])
-           if s.get("item_id")]
-    scl_masks, sources = [], []
-    if ids:
-        items = list(Client.open(stac_url).search(collections=[collection], ids=ids).items())
-        for item in items:
-            try:
-                scl = SentinelRepository._read_asset(item, "scl", grid, Resampling.nearest)
-                scl_masks.append(scl == WATER_SCL)
-                sources.append(f"SCL {item.id}")
-            except Exception as exc:  # noqa: BLE001
-                log.warning("SCL de %s indisponível: %s", item.id, exc)
-    worldcover = None
-    try:
-        worldcover = read_worldcover(grid)
-        if worldcover is not None:
-            sources.append("WorldCover 2021")
-    except Exception as exc:  # noqa: BLE001
-        log.warning("WorldCover indisponível: %s", exc)
-    water = water_mask(scl_masks, worldcover, shape)
-    save_water(folder, water, sources)
-    return {"water_share": round(float(water.mean()), 4), "sources": sources}

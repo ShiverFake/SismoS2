@@ -9,8 +9,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.models.change_detection import NODATA  # noqa: E402
-from app.models.grid_controls import (best_f1_threshold, compare_grid, cross_calibration,  # noqa: E402
-                                      delong_paired, f1_at, paired_bootstrap_auc)
+from app.models.grid_controls import (compare_grid, delong_paired, paired_bootstrap_auc)
 from app.models.grid_eval import auc_score  # noqa: E402
 from app.models.sentinel import Grid, SentinelError, SentinelRepository, latest_processing  # noqa: E402
 
@@ -76,20 +75,6 @@ def test_delong_known_cases():
     b = paired_bootstrap_auc(y, good, noise, n_boot=300)
     assert b["diff_ci95"][0] > 0 and b["p_value"] < 0.05
     assert delong_paired(np.array([True, False, False]), good[:3], noise[:3]) is None
-
-
-def test_best_f1_and_cross_calibration():
-    ch = np.array([0.0, 0.05, 0.1, 0.3, 0.4, 0.5])
-    pos = np.array([False, False, False, True, True, True])
-    best = best_f1_threshold(ch, pos)
-    assert best["threshold"] == 0.3 and best["f1"] == 1.0
-    assert f1_at(ch, pos, 0.05)["precision"] == pytest.approx(3 / 5)
-    src = {"100": {"change": ch.tolist(), "damaged": pos.tolist()}}
-    dst = {"100": {"change": [0.0, 0.2, 0.25, 0.35], "damaged": [False, True, True, True]}}
-    cc = cross_calibration(src, dst)["100"]
-    assert cc["threshold_from_source"] == 0.3
-    assert cc["applied_to_target"]["recall"] == pytest.approx(1 / 3, abs=1e-4)
-    assert cc["target_own_best"]["f1"] == 1.0
 
 
 def _layer(label, change):

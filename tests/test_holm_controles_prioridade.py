@@ -60,7 +60,6 @@ def test_series_goes_back_until_three_valid_years():
 
 
 def test_priority_bands_ties_and_zero_change():
-    change = [1, 1] + [1] * 0
     classes = np.zeros((1, 20), np.uint8)
     classes[0, :2] = 4
     classes[0, 2:4] = 4

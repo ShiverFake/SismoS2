@@ -8,7 +8,6 @@ from flask import Blueprint, current_app, jsonify, request
 
 from app.models.analysis import AnalysisRepository
 from app.models.ems import ems_repository
-from app.models.grid_controls import cross_calibration
 from app.models.validation import POSSIBLE_MODES, UNIT_MODES, ValidationService
 
 validation_bp = Blueprint("validation", __name__)
@@ -84,23 +83,6 @@ def start_validation(analysis_id: str):
 
     service.start(analysis, spec, upload)
     return jsonify(status="processing"), 202
-
-
-@validation_bp.get("/analises/<analysis_id>/validacao/calibracao")
-def cross_calibration_route(analysis_id: str):
-    """?com=<id>: limiar de melhor F1 na grade desta análise aplicado à outra, e vice-versa."""
-    other_id = request.args.get("com", "")
-    service = _service()
-    a, b = service.load(analysis_id), service.load(other_id) if service.repository.is_valid_id(other_id) else None
-    if not a or not b or a.get("status") != "done" or b.get("status") != "done":
-        return _bad("As duas análises precisam ter validação concluída.", 404)
-    scores = lambda v: {s: m["cells_scores"] for s, m in ((v.get("grid") or {}).get("sizes") or {}).items()  # noqa: E731
-                        if "cells_scores" in m}
-    sa, sb = scores(a), scores(b)
-    if not sa or not sb:
-        return _bad("Refaça a validação das duas análises (versão sem pontuação por célula).", 409)
-    return jsonify({"this": a.get("source"), "other": b.get("source"),
-                    "this_to_other": cross_calibration(sa, sb), "other_to_this": cross_calibration(sb, sa)})
 
 
 @validation_bp.get("/analises/<analysis_id>/validacao")

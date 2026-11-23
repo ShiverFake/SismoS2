@@ -3,17 +3,16 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-.taste-skill/
+.ruff_cache/
 
-# dados das análises (825 MB na VM): ficam só no servidor do projeto.
-# O que a vitrine publica já está copiado em dist/ pelo tools/build_vitrine.py.
+# dados das análises, caches de download e referências (gerados ao usar o sistema)
 data/
 
-# segredos e arquivos do servidor em execução
+# segredos, logs e arquivos do servidor em execução
 .env
 .env.*
 *.log
 *.pid
 
-# dist/ NÃO está aqui de propósito: é a pasta que a Vercel publica.
-DEPLOY_VERCEL.md
+# prints de conferência
+docs/prints/

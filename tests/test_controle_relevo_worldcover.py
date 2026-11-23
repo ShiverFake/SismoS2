@@ -9,8 +9,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.models.analysis import Analysis  # noqa: E402
-from app.models.change_detection import NODATA, ChangeParams, detect_changes  # noqa: E402
-from app.models.control import build_control, overlap_stats  # noqa: E402
+from app.models.change_detection import ChangeParams, detect_changes  # noqa: E402
 from app.models.landcover import tile_name, worldcover_tiles  # noqa: E402
 from app.models.sentinel import (Scene, apply_fixed_bright, bright_fixed_surface,  # noqa: E402
                                  masks_from_scl)
@@ -27,35 +26,6 @@ def _event(**kw):
                 topo_correction=True, event_id="turquia-2023", result={"topo": {"applied": True}})
     base.update(kw)
     return Analysis.new(**base)
-
-
-def test_control_same_options_dates_one_year_earlier_and_linked():
-    ev = _event()
-    ctl = build_control(ev)
-    assert (ctl.before_start, ctl.before_end) == ("2022-01-01", "2022-02-05")
-    assert (ctl.after_start, ctl.after_end) == ("2022-02-07", "2022-03-15")
-    assert ctl.bbox == ev.bbox and ctl.bbox is not ev.bbox
-    assert (ctl.threshold_method, ctl.k, ctl.min_region_px, ctl.median_composite, ctl.max_cloud) == \
-           ("otsu", 1.5, 8, True, 40)
-    assert ctl.topo_correction is True
-    assert ctl.control_of == ev.id and ctl.id != ev.id
-    assert "controle" in ctl.name
-
-
-def test_control_of_old_analysis_without_topo_keeps_topo_off():
-    ev = _event(result={})
-    assert build_control(ev).topo_correction is False
-
-
-def test_overlap_stats_counts_only_common_valid_pixels():
-    ev = np.array([[2, 2, 0, 0, 1, NODATA]], np.uint8)
-    ct = np.array([[2, 0, 4, 0, NODATA, 3]], np.uint8)
-    s = overlap_stats(ev, ct, pixel_area_m2=100.0)
-    assert s["event_changed_percent"] == 50.0 and s["control_changed_percent"] == 50.0
-    assert s["both_changed_km2"] == pytest.approx(100 / 1e6)
-    assert s["both_percent_of_event_change"] == 50.0
-    assert s["excess_percent_points"] == 0.0
-    assert s["_both"].tolist() == [[True, False, False, False, False, False]]
 
 
 # ================================================ 2) CORREÇÃO TOPOGRÁFICA
@@ -210,16 +180,3 @@ def test_c_correction_skips_band_with_weak_correlation():
     assert np.array_equal(out["nir"], band["nir"])
 
 
-def test_control_prefers_event_tile():
-    ev = _event(result={"topo": {"applied": True}, "before": {"tile": "36SYF"}})
-    assert build_control(ev).preferred_tile == "36SYF"
-
-
-def test_overlap_stats_urban_on_common_area():
-    ev = np.array([[2, 2, 0, 5, NODATA]], np.uint8)
-    ct = np.array([[0, 0, 0, 5, 0]], np.uint8)
-    urban = np.array([[True, True, True, False, True]])
-    s = overlap_stats(ev, ct, 1e6, urban)
-    assert s["urban_common_km2"] == pytest.approx(3.0)
-    assert s["event_urban_changed_percent"] == pytest.approx(66.667, abs=0.01)
-    assert s["control_urban_changed_percent"] == 0.0

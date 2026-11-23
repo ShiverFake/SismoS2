@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 from scipy import stats
@@ -161,46 +161,6 @@ def compare_grid(layers: List[dict], in_area: np.ndarray, unit_rows, unit_cols, 
 
 
 # -------------------------------------------------------------- calibração cruzada
-def best_f1_threshold(change: np.ndarray, positive: np.ndarray) -> Optional[dict]:
-    """Limiar de % de mudança com melhor F1 (célula apontada se change ≥ limiar)."""
-    change, positive = np.asarray(change, float), np.asarray(positive, bool)
-    if not positive.any():
-        return None
-    best = None
-    for t in np.unique(change):
-        if t <= 0:
-            continue
-        m = f1_at(change, positive, t)
-        if best is None or m["f1"] > best["f1"]:
-            best = {"threshold": round(float(t), 4), **m}
-    return best
-
-
-def f1_at(change, positive, threshold: float) -> dict:
-    pred = np.asarray(change) >= threshold
-    positive = np.asarray(positive, bool)
-    tp, fp, fn = int((pred & positive).sum()), int((pred & ~positive).sum()), int((~pred & positive).sum())
-    p = tp / (tp + fp) if tp + fp else 0.0
-    r = tp / (tp + fn) if tp + fn else 0.0
-    return {"precision": round(p, 4), "recall": round(r, 4), "f1": round(2 * p * r / (p + r), 4) if p + r else 0.0,
-            "tp": tp, "fp": fp, "fn": fn, "cells_flagged_share": round(float(pred.mean()), 4)}
-
-
-def cross_calibration(source: Dict[str, dict], target: Dict[str, dict]) -> Dict[str, dict]:
-    """source/target: {tamanho: {"change": [...], "damaged": [...]}}."""
-    out = {}
-    for size in sorted(set(source) & set(target), key=int):
-        s_ch, s_pos = np.array(source[size]["change"]), np.array(source[size]["damaged"], bool)
-        t_ch, t_pos = np.array(target[size]["change"]), np.array(target[size]["damaged"], bool)
-        best_src = best_f1_threshold(s_ch, s_pos)
-        if best_src is None:
-            continue
-        out[size] = {"threshold_from_source": best_src["threshold"], "source_best": best_src,
-                     "applied_to_target": f1_at(t_ch, t_pos, best_src["threshold"]),
-                     "target_own_best": best_f1_threshold(t_ch, t_pos)}
-    return out
-
-
 def plot_rocs(block: dict, path: str, title: str = "") -> None:
     """Curvas ROC do evento e dos controles (mesmas células)."""
     from app.models.plot_style import C, SERIES, br, decimal_comma, themed_pyplot
