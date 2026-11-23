@@ -1,5 +1,4 @@
-"""Testes: construções = ≥ 1 prédio do OSM OU WorldCover 50 ≥ 10% (prioridade) e WorldCover 50 OU até 10 m de
-um prédio do OSM (classe "possível dano em construções")."""
+"""Testes: construções = ≥ 1 prédio do OSM OU WorldCover 50 ≥ 10% (prioridade) e WorldCover 50 OU até 10 m de um prédio do OSM (classe "possível dano em construções")."""
 import os
 import sys
 
@@ -22,31 +21,31 @@ def _cells_of(shape, cell_px):
 
 
 def test_building_cells_uses_osm_or_built_share():
-    shape, cell_px = (4, 4), 2                  # 4 células de 2×2
+    shape, cell_px = (4, 4), 2
     cell, ncols = _cells_of(shape, cell_px)
     built = np.zeros(shape, bool)
-    built[0, 0] = True                           # célula 0: 25% construído
-    built[0, 2:4] = True                         # célula 1: 50% construído
-    b = {"built": built, "osm_rows": np.array([0, 3]), "osm_cols": np.array([3, 0]), }   # prédios nas células 1 e 2
-    assert building_cells(b, cell, 4, cell_px, ncols).tolist() == [True, True, True, False]   # OU
+    built[0, 0] = True
+    built[0, 2:4] = True
+    b = {"built": built, "osm_rows": np.array([0, 3]), "osm_cols": np.array([3, 0]), }
+    assert building_cells(b, cell, 4, cell_px, ncols).tolist() == [True, True, True, False]
     only_wc = {"built": built, "osm_rows": None, "osm_cols": None}
     assert building_cells(only_wc, cell, 4, cell_px, ncols).tolist() == [True, True, False, False]
     only_osm = {"built": None, "osm_rows": np.array([0, 3]), "osm_cols": np.array([3, 0])}
     assert building_cells(only_osm, cell, 4, cell_px, ncols).tolist() == [False, True, True, False]
-    assert building_cells(None, cell, 4, cell_px, ncols) is None   # sem dado nenhum: nada é filtrado
+    assert building_cells(None, cell, 4, cell_px, ncols) is None
 
 
 def test_priority_ranks_only_cells_with_buildings():
     classes = np.zeros((4, 4), np.uint8)
-    classes[2:4, 0:2] = 1                        # célula 2: muita mudança, mas é lavoura (sem prédio)
-    classes[0, 2] = 4                            # célula 1: um pixel com mudança, bairro construído
+    classes[2:4, 0:2] = 1
+    classes[0, 2] = 4
     built = np.zeros((4, 4), bool)
     built[0:2, 2:4] = True
     b = {"built": built, "osm_rows": np.array([1]), "osm_cols": np.array([3])}
     cells = priority_cells(classes, 2, None, b)
     assert cells["id"].tolist() == [1] and cells["band"].tolist() == ["top10"]
     assert sorted(cells["empty"]["id"].tolist()) == [0, 2, 3]
-    assert priority_cells(classes, 2)["band"][2] == "top10"   # sem o filtro, a lavoura lideraria
+    assert priority_cells(classes, 2)["band"][2] == "top10"
 
 
 def test_priority_summary_and_geojson_show_empty_cells():
@@ -55,7 +54,7 @@ def test_priority_summary_and_geojson_show_empty_cells():
     built = np.zeros((4, 4), bool)
     built[0:2, 2:4] = True
     b = {"built": built, "osm_rows": np.array([1]), "osm_cols": np.array([3])}
-    summary, gj = compute_priority(classes, Affine(100, 0, 0, 0, -100, 400), 100.0, None, b)   # células de 2 px
+    summary, gj = compute_priority(classes, Affine(100, 0, 0, 0, -100, 400), 100.0, None, b)
     assert summary["n_cells"] == 1 and summary["top10_n_cells"] == 1
     assert summary["empty"]["n_cells"] == 3 and summary["empty"]["label"] == "Sem construções"
     bands = [f["properties"]["band"] for f in gj["features"]]
@@ -67,7 +66,7 @@ def test_buildings_file_keeps_known_sources(tmp_path):
     built = np.ones((3, 3), bool)
     save_buildings(str(tmp_path), built=built)
     assert load_buildings(str(tmp_path))["osm_rows"] is None
-    save_buildings(str(tmp_path), osm_rows=[1], osm_cols=[2])        # completa sem perder o WorldCover
+    save_buildings(str(tmp_path), osm_rows=[1], osm_cols=[2])
     b = load_buildings(str(tmp_path))
     assert b["built"].all() and b["osm_rows"].tolist() == [1] and b["osm_cols"].tolist() == [2]
 
@@ -87,10 +86,9 @@ def test_urban_mask_is_worldcover_or_osm_footprint():
 def test_osm_footprint_is_buffered_by_ten_metres():
     from rasterio.warp import transform as warp_transform
     from shapely.geometry import box
-    # grade de 10 m em EPSG:3857 perto de (0°, 0°); um prédio no pixel (5, 5)
     t = Affine(10, 0, 0, 0, -10, 100)
     lon, lat = warp_transform("EPSG:3857", "EPSG:4326", [52, 58], [42, 48])
     mask = osm_footprint_mask([box(lon[0], lat[0], lon[1], lat[1])], t, (10, 10), res_m=10)
-    assert mask[5, 5] and mask[4, 5] and mask[6, 5] and mask[5, 4] and mask[5, 6]   # 1 pixel (10 m) em volta
+    assert mask[5, 5] and mask[4, 5] and mask[6, 5] and mask[5, 4] and mask[5, 6]
     assert not mask[2, 2] and not mask[8, 8]
     assert not osm_footprint_mask([], t, (10, 10), res_m=10).any()

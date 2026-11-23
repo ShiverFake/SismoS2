@@ -38,11 +38,10 @@ class ChangeDetectionService:
         self.max_dim = max_dim
         self.terrain = terrain or TerrainRepository(sentinel.stac_url)
         self.landcover_reader = landcover_reader
-        self.osm_reader = osm_reader   # grade → polígonos dos prédios do OSM (None: só o WorldCover)
+        self.osm_reader = osm_reader
 
     def _load_control_pair(self, analysis: Analysis, grid, step, notes: list) -> dict:
-        """Controle: avalia todas as cenas da janela (mesmo tile; mesma órbita do evento se houver ≥ 2)
-        e escolhe o par com intervalo mais parecido com o do evento e mais área válida."""
+        """Controle: avalia todas as cenas da janela (mesmo tile; mesma órbita do evento se houver ≥ 2) e escolhe o par com intervalo mais parecido com o do evento e mais área válida."""
         w = analysis.pair_window
         step(5, f"Buscando cenas de {w['start']} a {w['end']} (controle {analysis.control_year})…")
         items = self.sentinel.search(tuple(analysis.bbox), w["start"], w["end"], analysis.max_cloud,
@@ -68,7 +67,6 @@ class ChangeDetectionService:
             raise SentinelError(f"Sem par válido em {analysis.control_year}: {detail} "
                                 f"(mínimo {100 * min_valid:.0f}%, {len(cands)} cenas avaliadas).")
         b, a = cands[pair["before"]], cands[pair["after"]]
-        # as datas da análise passam a ser as do par escolhido
         analysis.before_start = analysis.before_end = dates[pair["before"]].isoformat()
         analysis.after_start = analysis.after_end = dates[pair["after"]].isoformat()
         notes.append(f"Controle {analysis.control_year}: par {analysis.before_start} → {analysis.after_start} "
@@ -113,13 +111,10 @@ class ChangeDetectionService:
             periods = (("antes", analysis.before_start, analysis.before_end, 5, "latest"),
                        ("depois", analysis.after_start, analysis.after_end, 30, "earliest"))
             if analysis.pair_window:
-                # controle de vários anos: o par de cenas é escolhido dentro de uma janela
                 loaded = self._load_control_pair(analysis, grid, step, notes)
                 periods = ()
             for label, start, end, base, prefer in periods:
                 step(base, f"Buscando cenas Sentinel-2 ({label}) de {start} a {end}…")
-                # A cena "antes" é escolhida primeiro; a "depois" é buscada no MESMO tile
-                # (e de preferência na mesma órbita) da cena "antes" escolhida (reference).
                 items = self.sentinel.search(bbox, start, end, analysis.max_cloud, prefer=prefer,
                                              reference=reference, tile=analysis.preferred_tile)
                 if not items:
@@ -127,11 +122,9 @@ class ChangeDetectionService:
                         f"Nenhuma cena Sentinel-2 encontrada no período '{label}' ({start} a {end}) "
                         f"com menos de {analysis.max_cloud}% de nuvens."
                     )
-                # Até 5 candidatas, ordenadas pela % de área limpa dentro do retângulo (SCL)
                 ranked = self.sentinel.rank_candidates(
                     items, grid, progress=lambda m, b=base, lb=label: step(b + 5, f"({lb}) {m}"))
                 best = ranked[0]
-                # Composição por mediana: até 3 cenas do MESMO tile da melhor
                 if analysis.median_composite:
                     chosen = [c for c in ranked if tile_of(c.item) == tile_of(best.item)][:MAX_COMPOSITE]
                 else:
@@ -155,7 +148,6 @@ class ChangeDetectionService:
             if analysis.topo_correction:
                 step(56, "Baixando o Copernicus DEM e corrigindo o relevo (C-correction)…")
                 try:
-                    # confere o sol de todas as cenas ANTES de mexer em alguma (evita corrigir só metade)
                     if any(s.sun_azimuth is None or s.sun_elevation is None for s in all_scenes):
                         raise ValueError("alguma cena não informa o ângulo do sol (view:sun_*)")
                     dem = self.terrain.dem_for_grid(grid)
@@ -193,22 +185,20 @@ class ChangeDetectionService:
                     urban = worldcover == BUILT_UP
                 else:
                     notes.append("ESA WorldCover sem dados na área: solo exposto não foi separado em urbano/fora.")
-            except Exception as exc:  # noqa: BLE001 — sem WorldCover a análise segue
+            except Exception as exc:  # noqa: BLE001
                 log.warning("WorldCover indisponível: %s", exc)
                 notes.append(f"ESA WorldCover indisponível ({exc}): solo exposto não foi separado em urbano/fora.")
 
             step(75, "Executando Change Vector Analysis e classificação…")
             params = ChangeParams(threshold_method=analysis.threshold_method, k=analysis.k,
                                   min_region_px=analysis.min_region_px)
-            # área construída da classificação: WorldCover 50 OU a até 10 m de um prédio do OSM (buildings.py).
-            # A máscara "urban" (só WorldCover) continua nas estatísticas e em bands.npz.
             osm_rows = osm_cols = osm_mask = None
             if self.osm_reader is not None:
                 try:
                     polys = self.osm_reader(grid)
                     osm_rows, osm_cols = osm_pixels(polys, grid.transform, valid.shape)
                     osm_mask = osm_footprint_mask(polys, grid.transform, valid.shape, grid.ground_resolution)
-                except Exception as exc:  # noqa: BLE001 — sem OSM, fica só o WorldCover
+                except Exception as exc:  # noqa: BLE001
                     log.warning("Prédios do OSM indisponíveis: %s", exc)
                     notes.append("Prédios do OpenStreetMap indisponíveis: a área construída veio só do WorldCover.")
             class_urban = urban
@@ -217,7 +207,6 @@ class ChangeDetectionService:
             result = detect_changes(before.bands, after.bands, valid, params, urban=class_urban)
             stats = compute_statistics(result, grid.pixel_area_m2)
 
-            # Estatísticas de NDVI só em terra (fora: água pela SCL=6 ou NDWI>0)
             land = land_mask(valid, result.indices_before["ndwi"], result.indices_after["ndwi"],
                              before.water_mask, after.water_mask)
             ndvi_b, ndvi_a = result.indices_before["ndvi"][land], result.indices_after["ndvi"][land]
@@ -232,7 +221,6 @@ class ChangeDetectionService:
             if urban is not None:
                 stats["urban"] = urban_stats(result.changed, urban, valid, grid.pixel_area_m2)
 
-            # Avisos de qualidade
             warnings = quality_warnings(
                 valid_fraction=float(valid.mean()), before=before.metadata(), after=after.metadata(),
                 median_dndvi=median_dndvi, after_start=analysis.after_start, after_end=analysis.after_end)
@@ -247,17 +235,15 @@ class ChangeDetectionService:
             mag_scale = renderer.save_magnitude(result.magnitude, os.path.join(out_dir, "magnitude.png"),
                                                 result.threshold)
             renderer.save_geotiffs(result, grid, out_dir)
-            # bandas (já corrigidas) guardadas em float16 para validar/comparar métodos sem baixar de novo
             extra = {}
             if urban is not None:
                 extra["urban"] = urban
             if slope is not None:
                 extra["slope_deg"] = np.degrees(slope).astype(np.float16)
-            # água (SCL 6 em qualquer data ou WorldCover 80): fica fora do ranking de prioridade e da grade
             water = water_mask([before.water_mask, after.water_mask], worldcover, valid.shape)
             save_water(out_dir, water, [n for n, m in (("SCL antes", before.water_mask), ("SCL depois", after.water_mask),
                                                         ("WorldCover 2021", worldcover)) if m is not None])
-            if urban is not None or osm_rows is not None:   # construções: prioridade e classe de dano
+            if urban is not None or osm_rows is not None:
                 save_buildings(out_dir, built=urban, osm_rows=osm_rows, osm_cols=osm_cols, osm_mask=osm_mask)
             np.savez_compressed(
                 os.path.join(out_dir, "bands.npz"),
@@ -286,7 +272,6 @@ class ChangeDetectionService:
                 "legend": [{"id": c, "name": i["name"], "color": "rgb({},{},{})".format(*i["color"][:3])}
                            for c, i in CLASSES.items() if c != 0 and (class_urban is not None or c != 5)],
                 "elapsed_s": round(time.time() - started, 1),
-                # NDVI: pixels válidos (sem nuvem nas duas datas) e sem água
                 "ndvi_stats_mask": "válidos, sem água",
                 "mean_ndvi_before": _nanmean(ndvi_b),
                 "mean_ndvi_after": _nanmean(ndvi_a),
@@ -295,7 +280,7 @@ class ChangeDetectionService:
                 "median_composite": bool(analysis.median_composite),
             })
             analysis.status, analysis.progress, analysis.message = "done", 100, "Concluído"
-        except Exception as exc:  # noqa: BLE001 — qualquer falha vira mensagem para o usuário
+        except Exception as exc:  # noqa: BLE001
             log.exception("Falha na análise %s", analysis.id)
             analysis.status = "error"
             analysis.error = str(exc) if isinstance(exc, (SentinelError, ValueError)) else f"{type(exc).__name__}: {exc}"

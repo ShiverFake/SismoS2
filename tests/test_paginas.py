@@ -1,5 +1,4 @@
-"""Testes das páginas do site: status 200, controles agrupados na galeria, início com números reais e
-redirecionamento das URLs antigas."""
+"""Testes das páginas do site: status 200, controles agrupados na galeria, início com números reais e redirecionamento das URLs antigas."""
 import json
 import os
 import sys
@@ -73,17 +72,17 @@ def test_result_page_has_tabs_and_kpis(site):
     html = c.get(f"/analise/{event.id}").get_data(as_text=True)
     for key in ("mapa", "validacao", "controles", "cenas", "downloads"):
         assert f'data-tab="{key}"' in html and f'id="panel-{key}"' in html
-    assert "55,8 km²" in html and "3,1%" in html          # KPIs vêm do resultado salvo
-    assert "Células prioritárias" in html and "Mudança detectada</div>" not in html   # o KPI de % saiu da linha
-    assert "tende a ficar entre 2 e 5% em qualquer par de datas" in html            # a % foi para Cenas e qualidade
-    assert "0,71" in html                                   # AUC da validação (células de 200 m)
-    assert 'data-tab="controles"' in html and ">2<" in html  # aba Controles mostra 2 controles
+    assert "55,8 km²" in html and "3,1%" in html
+    assert "Células prioritárias" in html and "Mudança detectada</div>" not in html
+    assert "tende a ficar entre 2 e 5% em qualquer par de datas" in html
+    assert "0,71" in html
+    assert 'data-tab="controles"' in html and ">2<" in html
 
 
 def test_gallery_groups_controls_inside_main_analysis(site):
     c, event, controls, plain = site
     html = c.get("/analises").get_data(as_text=True)
-    assert html.count('class="a-card"') == 2               # evento + análise sem validação; controles não
+    assert html.count('class="a-card"') == 2
     for ctl in controls:
         assert ctl.name not in html and f"/analise/{ctl.id}" not in html
     assert f"/analise/{event.id}" in html and f"/analise/{plain.id}" in html
@@ -93,10 +92,10 @@ def test_gallery_groups_controls_inside_main_analysis(site):
 def test_home_shows_numbers_from_saved_analyses(site):
     c, event, *_ = site
     html = c.get("/").get_data(as_text=True)
-    assert "Marrocos – Al Haouz" in html                    # nome do exemplo ligado pela ativação EMSR695
-    assert "0,71" in html and "0,56" in html                # AUC do evento e média dos controles
-    assert "0,014" in html                                  # p do DeLong
-    assert "29/08/2023" not in html and "25/01/2023" in html  # datas das cenas salvas, em dd/mm/aaaa
+    assert "Marrocos – Al Haouz" in html
+    assert "0,71" in html and "0,56" in html
+    assert "0,014" in html
+    assert "29/08/2023" not in html and "25/01/2023" in html
     assert f"/analise/{event.id}" in html
 
 
@@ -195,7 +194,7 @@ def test_home_compare_uses_featured_analysis(site):
     from app.models.analysis import AnalysisRepository
     repo = AnalysisRepository(c.application.config["RESULTS_DIR"])
     html = c.get("/").get_data(as_text=True)
-    assert 'id="cmp"' not in html                       # sem análise destacada: sem comparador
+    assert 'id="cmp"' not in html
     a = repo.get(event.id)
     a.featured = True
     a.result["grid"].update(transform=[10, 0, 0, 0, -10, 0], width=40, height=30, ground_resolution_m=10)
@@ -210,6 +209,28 @@ def test_main_auc_prefers_event_vs_controls():
     from app.controllers.main_controller import main_auc
     v = {"grid": {"sizes": {"200": {"auc": {"value": 0.7046}}}},
          "grid_controls": {"sizes": {"200": {"analyses": [{"auc": 0.7056}, {"auc": 0.55}]}}}}
-    assert main_auc(v) == 0.7056                       # o mesmo número do Início e do resultado principal
-    assert main_auc({"grid": v["grid"]}) == 0.7046     # sem controles: a quadrícula do evento
+    assert main_auc(v) == 0.7056
+    assert main_auc({"grid": v["grid"]}) == 0.7046
     assert main_auc(None) is None
+
+
+def test_about_has_no_academic_context(site):
+    c, *_ = site
+    html = c.get("/sobre").get_data(as_text=True)
+    assert "Contexto acadêmico" not in html and "fill-in" not in html and "[seu nome]" not in html
+    assert "Tecnologias" in html
+
+
+def test_downloads_show_titles_without_file_names(site):
+    c, event, *_ = site
+    html = c.get(f"/analise/{event.id}").get_data(as_text=True)
+    panel = html[html.index('id="panel-downloads"'):]
+    assert "<b>Magnitude CVA</b></td>" in panel
+    for fname in ("magnitude.tif", "dndvi.tif", "priority_200.geojson", "analysis.json"):
+        assert f">{fname}<" not in panel                       # só no link, não como texto
+    assert f'/api/analises/{event.id}/arquivos/magnitude.tif' in panel
+
+
+def test_layer_labels_say_satellite_photo():
+    js = open(os.path.join(os.path.dirname(__file__), "..", "app", "views", "static", "js", "analysis.js"), encoding="utf-8").read()
+    assert "Foto de satélite – antes" in js and "Foto de satélite – depois" in js and "cor verdadeira" not in js

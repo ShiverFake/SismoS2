@@ -1,25 +1,19 @@
-"""Model: estilo único dos gráficos (matplotlib) com as cores do site (app/views/static/css/tokens.css).
-
-Todos os gráficos chamam `themed_pyplot()` em vez de importar o pyplot direto: fundo azul-marinho igual
-ao dos cartões, texto claro, grade discreta e a fonte Inter (com DejaVu Sans de reserva).
-"""
+"""Model: estilo único dos gráficos (matplotlib) com as cores do site (app/views/static/css/tokens.css)."""
 from __future__ import annotations
 
-# mesmas cores dos tokens do CSS
 C = {
-    "bg": "#10223a",        # --navy-800 (fundo dos cartões onde os gráficos aparecem)
-    "grid": "#26476e",      # --navy-600
-    "ink": "#e8eef6",       # --ink
-    "muted": "#9db0c7",     # --ink-muted
-    "faint": "#6f86a1",     # --ink-faint
-    "red": "#ef4444",       # --red (destaque: o evento, o sistema)
-    "ok": "#34c47c",        # --ok
-    "warn": "#f2b84b",      # --warn
-    "info": "#6aa7ff",      # --info
+    "bg": "#10223a",
+    "grid": "#26476e",
+    "ink": "#e8eef6",
+    "muted": "#9db0c7",
+    "faint": "#6f86a1",
+    "red": "#ef4444",
+    "ok": "#34c47c",
+    "warn": "#f2b84b",
+    "info": "#6aa7ff",
     "violet": "#b48cff",
     "cyan": "#3cc8d8",
 }
-# ordem das séries: evento primeiro (vermelho), depois os controles
 SERIES = [C["red"], C["info"], C["warn"], C["ok"], C["violet"], C["cyan"]]
 
 RC = {
@@ -38,13 +32,13 @@ RC = {
 
 def br(value, digits: int = 2) -> str:
     """Número com vírgula decimal (pt-BR), para títulos, legendas e anotações."""
-    if value is None or value != value:   # None ou NaN
+    if value is None or value != value:
         return "—"
     return f"{value:,.{digits}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def decimal_comma(ax, x: bool = True, y: bool = True) -> None:
-    """Marcas dos eixos com vírgula decimal (0,2 · 0,4 …). Não mexe num eixo com rótulos de texto próprios."""
+    """Marcas dos eixos com vírgula decimal (0,2 · 0,4 …)."""
     from matplotlib.ticker import FuncFormatter
 
     fmt = FuncFormatter(lambda v, _pos: f"{v:g}".replace(".", ","))

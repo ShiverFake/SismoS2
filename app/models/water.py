@@ -1,12 +1,4 @@
-"""Model: máscara de água da análise, para tirar rios, lagos e mar do ranking de prioridade e da grade.
-
-Água = SCL 6 (água) em qualquer das datas OU ESA WorldCover 2021 classe 80 (água permanente).
-Uma célula com mais de MAX_WATER_SHARE dos seus pixels em água não entra no ranking de prioridade nem
-na avaliação por quadrícula: a mudança em água (sedimento, onda, reflexo do sol) não diz nada sobre dano.
-
-A máscara fica em water.npz na pasta da análise. Análises novas gravam no processamento; para as
-antigas, `rebuild_water` relê a SCL das cenas usadas e o WorldCover na mesma grade.
-"""
+"""Model: máscara de água da análise, para tirar rios, lagos e mar do ranking de prioridade e da grade."""
 from __future__ import annotations
 
 import logging
@@ -21,7 +13,7 @@ WATER_FILE = "water.npz"
 WATER_SCL = 6
 WORLDCOVER_WATER = 80
 MAX_WATER_SHARE = 0.5
-WATER_VERSION = 1   # muda quando a regra muda: invalida os caches de prioridade
+WATER_VERSION = 1
 
 
 def water_mask(scl_water: Iterable[Optional[np.ndarray]], worldcover: Optional[np.ndarray],
@@ -42,7 +34,7 @@ def save_water(folder: str, water: np.ndarray, sources: list) -> None:
 
 
 def load_water(folder: str, shape=None) -> Optional[np.ndarray]:
-    """Máscara salva (ou None se a análise ainda não tem). Confere o tamanho quando `shape` é dado."""
+    """Máscara salva (ou None se a análise ainda não tem)."""
     path = os.path.join(folder, WATER_FILE)
     if not os.path.exists(path):
         return None
@@ -56,7 +48,7 @@ def load_water(folder: str, shape=None) -> Optional[np.ndarray]:
 
 def water_cells(water: Optional[np.ndarray], cell_of_px: np.ndarray, n_cells: int,
                 base: Optional[np.ndarray] = None) -> np.ndarray:
-    """Células com mais de MAX_WATER_SHARE de água (entre os pixels de `base`, se dado). Bool por célula."""
+    """Células com mais de MAX_WATER_SHARE de água (entre os pixels de `base`, se dado)."""
     if water is None:
         return np.zeros(n_cells, dtype=bool)
     sel = np.ones(water.shape, bool) if base is None else base
@@ -79,7 +71,7 @@ def grid_from_result(result: dict):
 
 
 def rebuild_water(folder: str, result: dict, stac_url: str, collection: str) -> dict:
-    """Relê a SCL das cenas usadas (antes e depois) e o WorldCover; grava water.npz. Devolve um resumo."""
+    """Relê a SCL das cenas usadas (antes e depois) e o WorldCover; grava water.npz."""
     from pystac_client import Client
     from rasterio.enums import Resampling
 
@@ -98,7 +90,7 @@ def rebuild_water(folder: str, result: dict, stac_url: str, collection: str) -> 
                 scl = SentinelRepository._read_asset(item, "scl", grid, Resampling.nearest)
                 scl_masks.append(scl == WATER_SCL)
                 sources.append(f"SCL {item.id}")
-            except Exception as exc:  # noqa: BLE001 — sem SCL, fica só o WorldCover
+            except Exception as exc:  # noqa: BLE001
                 log.warning("SCL de %s indisponível: %s", item.id, exc)
     worldcover = None
     try:

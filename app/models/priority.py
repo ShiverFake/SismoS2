@@ -1,17 +1,4 @@
-"""Model: "Prioridade de vistoria" — ranking das células de 200 m pela % de pixels com mudança.
-
-Não usa referência de dano: funciona logo depois do processamento, para qualquer análise. É um
-RANKING RELATIVO dentro do retângulo (onde olhar primeiro), não um diagnóstico de dano — a mudança
-também vem de lavouras, obras, sombras etc. A validação mostrou que, nas células de 200 m, visitar as
-10% mais mudadas alcança 2 a 4× mais prédios com dano do que escolher ao acaso.
-
-Faixas: top 10%, 10–20%, 20–30% e demais, pela posição no ranking (empates ficam na mesma faixa:
-a posição de uma célula = quantas células têm mudança ESTRITAMENTE maior). Células sem nenhuma
-mudança ficam sempre em "demais". Só entram células com ≥ 50% dos pixels válidos e com no máximo
-50% de água (SCL 6 ou WorldCover 80, ver water.py): rio, lago e mar ficam fora do ranking. Também ficam
-fora as células "sem construções" (< 10% construído no WorldCover ou nenhum prédio do OSM, ver
-buildings.py): elas aparecem no mapa em cinza claro, sem posição no ranking.
-"""
+"""Model: "Prioridade de vistoria" — ranking das células de 200 m pela % de pixels com mudança."""
 from __future__ import annotations
 
 import math
@@ -26,13 +13,13 @@ from app.models.water import water_cells
 
 PRIORITY_CELL_M = 200
 MIN_VALID_SHARE = 0.5
-BANDS = [  # (limite superior da posição relativa, chave, rótulo, cor)
+BANDS = [
     (0.10, "top10", "Top 10%", "#b91c1c"),
     (0.20, "p10_20", "10–20%", "#f97316"),
     (0.30, "p20_30", "20–30%", "#facc15"),
     (math.inf, "rest", "Demais", "#94a3b8"),
 ]
-EMPTY = ("empty", "Sem construções", "#cbd5e1")   # fora do ranking: sem área construída ou sem prédio do OSM
+EMPTY = ("empty", "Sem construções", "#cbd5e1")
 
 
 def band_of(rank_frac: float, change: float) -> str:
@@ -43,10 +30,7 @@ def band_of(rank_frac: float, change: float) -> str:
 
 def priority_cells(classes: np.ndarray, cell_px: int, water: Optional[np.ndarray] = None,
                    buildings: Optional[dict] = None) -> Dict[str, np.ndarray]:
-    """Agrega o mapa de classes em células de cell_px × cell_px e calcula a posição no ranking.
-
-    water: máscara de água da análise; células com mais de 50% de água ficam fora.
-    buildings: dados de buildings.py; células sem construções ficam fora do ranking (devolvidas à parte)."""
+    """Agrega o mapa de classes em células de cell_px × cell_px e calcula a posição no ranking."""
     h, w = classes.shape
     ncols = math.ceil(w / cell_px)
     rr, cc = np.indices((h, w))
@@ -68,7 +52,6 @@ def priority_cells(classes: np.ndarray, cell_px: int, water: Optional[np.ndarray
         keep &= with_build
     ids = np.flatnonzero(keep)
     change = px_changed[ids] / px_valid[ids]
-    # posição = nº de células com mudança estritamente maior (empates dividem a mesma faixa)
     position = len(change) - np.searchsorted(np.sort(change), change, side="right")
     rank_frac = position / max(len(change), 1)
     bands = np.array([band_of(f, c) for f, c in zip(rank_frac, change)], dtype=object)

@@ -1,14 +1,4 @@
-"""Model: estatísticas da validação — intervalos de confiança (bootstrap) e efeito de vizinhança.
-
-Bootstrap: reamostra os PRÉDIOS com reposição (1000 vezes), recalcula as métricas em cada amostra e
-usa os percentis 2,5 e 97,5 como intervalo de confiança de 95%. Mostra quanto as métricas variariam
-com outro conjunto de prédios do mesmo tipo — com 2 mil prédios, uma diferença de 0,02 no F1 pode
-ser só ruído.
-
-Vizinhança: com pixels de 10 m, a mudança de um prédio que desabou "vaza" para os vizinhos. Se os
-acertos nos danificados e os alarmes falsos nos prédios sem dano se concentram perto de prédios
-destruídos, parte do desempenho vem da proximidade, não do dano do próprio prédio.
-"""
+"""Model: estatísticas da validação — intervalos de confiança (bootstrap) e efeito de vizinhança."""
 from __future__ import annotations
 
 import math
@@ -39,16 +29,11 @@ def _metrics_from_counts(tp, fp, fn, tn):
 
 def bootstrap_ci(detected: np.ndarray, labels: np.ndarray, grades: np.ndarray,
                  n_boot: int = 1000, seed: int = 0, level: float = 0.95) -> Dict[str, dict]:
-    """IC por bootstrap dos prédios.
-
-    detected: prédio marcado como mudança; labels: 1 dano, 0 sem dano, −1 fora da matriz (ex.: "possivelmente"
-    na variante (a) — continua na amostra para o recall da própria classe); grades: classe da referência.
-    Devolve {métrica: {value, lo, hi}} para precisão, recall, F1, κ e recall de cada classe.
-    """
+    """IC por bootstrap dos prédios."""
     detected, labels, grades = np.asarray(detected, bool), np.asarray(labels), np.asarray(grades, dtype=object)
     n = len(detected)
     rng = np.random.default_rng(seed)
-    idx = rng.integers(0, n, size=(n_boot, n))             # cada linha = uma reamostragem dos prédios
+    idx = rng.integers(0, n, size=(n_boot, n))
     d, lab, g = detected[idx], labels[idx], grades[idx]
     pos, neg = lab == 1, lab == 0
     boot = _metrics_from_counts((d & pos).sum(1), (d & neg).sum(1), (~d & pos).sum(1), (~d & neg).sum(1))
@@ -92,7 +77,6 @@ def distance_to_nearest_destroyed(lon: np.ndarray, lat: np.ndarray, grades: np.n
     dist, nn = tree.query(xy, k=k)
     if k == 1:
         dist, nn = dist[:, None], nn[:, None]
-    # para um destruído, o vizinho mais próximo é ele mesmo (distância 0): usa o segundo
     is_self = dest[nn[:, 0]] == np.arange(len(xy))
     out = np.where(is_self, dist[:, 1] if k == 2 else np.inf, dist[:, 0])
     return out
@@ -110,8 +94,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> Tuple[Optional[float], Optional[f
 
 
 def neighborhood_table(distance_m: np.ndarray, detected: np.ndarray, grades: np.ndarray) -> List[dict]:
-    """Por faixa de distância ao destruído mais próximo: recall dos danificados e dos possivelmente
-    danificados, e taxa de alarme falso nos prédios sem dano (com IC de Wilson)."""
+    """Por faixa de distância ao destruído mais próximo: recall dos danificados e dos possivelmente danificados, e taxa de alarme falso nos prédios sem dano (com IC de Wilson)."""
     grades = np.asarray(grades, dtype=object)
     rows = []
     for lo, hi, label in BANDS_M:
@@ -151,7 +134,7 @@ def plot_neighborhood(rows: List[dict], path: str, title: str = "") -> None:
     ax.set_xlabel("Distância até o prédio destruído mais próximo")
     ax.set_ylabel("% marcado como mudança")
     ax.set_ylim(0, 100)
-    decimal_comma(ax, x=False)   # o eixo x tem os rótulos das faixas de distância
+    decimal_comma(ax, x=False)
     ax.grid(axis="y")
     ax.legend(fontsize=8, loc="upper right")
     if title:

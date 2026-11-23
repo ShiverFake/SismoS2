@@ -1,8 +1,4 @@
-"""Refaz as validações já concluídas com os mesmos parâmetros (para aplicar regras novas e regerar os gráficos).
-
-Uso (na VM, com o servidor parado ou não):  .venv/bin/python tools/revalidar.py [id ...]
-Fonte EMS: usa a mesma ativação/AOI. Fonte arquivo: reenvia o arquivo guardado em data/references.
-"""
+"""Refaz as validações já concluídas com os mesmos parâmetros (para aplicar regras novas e regerar os gráficos)."""
 from __future__ import annotations
 
 import io

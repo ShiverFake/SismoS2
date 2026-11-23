@@ -38,6 +38,10 @@
     <tr><td>B12</td><td>SWIR 2</td><td>2190 nm</td><td>20 m → 10 m</td></tr>
     <tr><td>SCL</td><td>Classificação da cena</td><td>—</td><td>20 m</td></tr>
   </table>
+  <p>As fotos de satélite “antes” e “depois” do mapa são composições em <strong>cor verdadeira</strong>: as bandas
+  B04 (vermelho), B03 (verde) e B02 (azul) nos canais vermelho, verde e azul da imagem. As duas datas usam o mesmo
+  contraste (percentis 2 a 98 da reflectância das duas juntas), para que uma diferença de cor seja da superfície e
+  não do realce.</p>
 
   <h2 id="cenas"><span class="sec-n">2</span>Seleção das cenas</h2>
   <p>Para cada período (antes/depois) buscam-se cenas com cobertura de nuvens abaixo do limite.
@@ -231,7 +235,7 @@
 {% endblock %}
 {% block scripts %}
 <script>
-  (function () {   // destaca no índice a seção visível
+  (function () {
     const links = [...document.querySelectorAll(".toc a")];
     const byId = Object.fromEntries(links.map((a) => [a.hash.slice(1), a]));
     const obs = new IntersectionObserver((entries) => {

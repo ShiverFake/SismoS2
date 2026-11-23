@@ -1,9 +1,4 @@
-"""Gera a máscara de água (water.npz) das análises já feitas e regera a prioridade e as miniaturas.
-
-Uso (na VM):  .venv/bin/python tools/regerar_agua.py [id ...]
-Sem ids, processa todas as análises concluídas. Relê a SCL das cenas usadas e o WorldCover na grade
-de cada análise (só a janela do retângulo é baixada).
-"""
+"""Gera a máscara de água (water.npz) das análises já feitas e regera a prioridade e as miniaturas."""
 from __future__ import annotations
 
 import os

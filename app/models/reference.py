@@ -1,12 +1,4 @@
-"""Model: dados de referência para validação (Copernicus EMS, arquivos do usuário, prédios do OSM).
-
-- Copernicus EMS Rapid Mapping: produtos de "grading" com um ponto/polígono por edificação
-  afetada e o grau de dano (Destroyed / Damaged / Possibly damaged).
-- Arquivo enviado pelo usuário: GeoJSON ou .zip (formato EMS, UNOSAT ou genérico com um
-  campo de grau de dano).
-- OpenStreetMap (Overpass API): todas as edificações da área, usadas como população de prédios
-  — os que não têm ponto de dano no EMS são considerados "sem dano".
-"""
+"""Model: dados de referência para validação (Copernicus EMS, arquivos do usuário, prédios do OSM)."""
 from __future__ import annotations
 
 import hashlib
@@ -35,7 +27,7 @@ USER_AGENT = "SismoS2/1.0 (trabalho academico; deteccao de mudancas Sentinel-2)"
 SEVERITY = {"none": 0, "possibly": 1, "damaged": 2, "destroyed": 3}
 GRADE_LABELS = {"destroyed": "Destruído", "damaged": "Danificado",
                 "possibly": "Possivelmente danificado", "none": "Sem dano"}
-DESTROYED_FLAGS = ("destroyed_building", "destroyed:building")   # exportações do OSM/HOT
+DESTROYED_FLAGS = ("destroyed_building", "destroyed:building")
 DAMAGE_FIELDS = ("damage_gra", "main_damag", "damage_cla", "damage_class", "dmg_grade",
                  "grading", "damage", "dam_cat", "damagecat")
 
@@ -46,18 +38,18 @@ class ReferenceDataError(ValueError):
 
 @dataclass
 class ReferenceFeature:
-    geometry: object      # shapely (lon/lat)
-    grade: str            # destroyed | damaged | possibly | none
+    geometry: object
+    grade: str
 
 
 @dataclass
 class ReferenceData:
     source: str
     features: List[ReferenceFeature]
-    aoi: Optional[object] = None          # polígono (lon/lat) da área avaliada pelo produtor
+    aoi: Optional[object] = None
     notes: List[str] = field(default_factory=list)
-    raw_values: dict = field(default_factory=dict)   # contagem de cada valor original do campo de dano
-    area_breakdown: dict = field(default_factory=dict)  # km² da AOI, da imagem, das exclusões e da área final
+    raw_values: dict = field(default_factory=dict)
+    area_breakdown: dict = field(default_factory=dict)
 
     def grade_counts(self) -> dict:
         counts = {g: 0 for g in SEVERITY}
@@ -89,7 +81,6 @@ def _find_damage_field(props: dict) -> Optional[str]:
         if name in lower:
             return lower[name]
     for k_low, k in lower.items():
-        # ignora campos de metadados do evento (damage_date, damage_event, damage_type…)
         if ("damag" in k_low or "grad" in k_low) and not any(x in k_low for x in ("date", "event", "type")):
             return k
     return None
@@ -100,7 +91,7 @@ def _crs_of(obj: dict) -> Optional[str]:
     m = re.search(r"EPSG::?(\d+)", name)
     if m and m.group(1) != "4326":
         return f"EPSG:{m.group(1)}"
-    return None  # CRS84 / EPSG:4326 / ausente (padrão GeoJSON)
+    return None
 
 
 def source_kind(source: str) -> str:
@@ -133,7 +124,6 @@ def parse_geojson(obj: dict, source: str) -> List[ReferenceFeature]:
             continue
         flag = next((props[k] for k in DESTROYED_FLAGS if k in props), None)
         if flag is not None:
-            # OpenStreetMap / HOT: destroyed:building = yes (só registra prédios destruídos)
             grade = "destroyed" if str(flag).strip().lower() in ("yes", "true", "1") else None
         else:
             if damage_field is None:
@@ -184,13 +174,11 @@ def load_zip(data: bytes, source: str) -> ReferenceData:
         except (ValueError, KeyError):
             pass
 
-    # Área efetivamente avaliada = AOI ∩ cobertura da imagem VHR − áreas marcadas como não analisadas
     aoi = None
     if aoi_files:
         aoi = unary_union([_aoi_from_geojson(json.loads(z.read(n))) for n in aoi_files])
     footprint_files = [n for n in jsons if re.search(r"imagefootprint[a]?_v\d+\.(geo)?json$", n, re.I)]
     not_analysed_files = [n for n in jsons if re.search(r"not_?analy[sz]", n, re.I)]
-    # imagens usadas para classificar o dano: dmg_src_id dos prédios ↔ or_src_id das pegadas de imagem
     damage_sources = set()
     for name in candidates:
         try:
@@ -207,7 +195,7 @@ def load_zip(data: bytes, source: str) -> ReferenceData:
                               f"(or_src_id {sorted(damage_sources)}), {len(used)} de {len(fps)} polígonos.")
         footprint = unary_union([shape(f["geometry"]) for f in (used or fps)])
     excluded = [_aoi_from_geojson(json.loads(z.read(n))) for n in not_analysed_files]
-    for n in aoi_files + footprint_files:  # feições marcadas "Not analysed" dentro dessas camadas
+    for n in aoi_files + footprint_files:
         excluded += [shape(f["geometry"]) for f in json.loads(z.read(n)).get("features", [])
                      if f.get("geometry") and _is_not_analysed(f.get("properties") or {})]
     excluded = unary_union([g for g in excluded if g is not None and not g.is_empty]) if excluded else None
@@ -275,14 +263,12 @@ def _finish(ref: ReferenceData) -> ReferenceData:
         raise ReferenceDataError("Nenhuma feição com grau de dano reconhecido (ex.: campo 'damage_gra' "
                               "com 'Destroyed', 'Damaged', 'Possibly damaged').")
     if ref.aoi is None:
-        # sem AOI oficial: usa o envoltório convexo das feições + 100 m
         ref.aoi = unary_union([f.geometry for f in ref.features]).convex_hull.buffer(0.001)
         ref.notes.append("A referência não trouxe a área avaliada (AOI); foi usado o envoltório "
                          "convexo das feições + ~100 m.")
     return ref
 
 
-# O download dos produtos do Copernicus EMS fica em app/models/ems.py (EmsRepository).
 
 
 # ------------------------------------------------------- OpenStreetMap
@@ -307,7 +293,7 @@ def fetch_osm_buildings(bbox, cache_dir: str, overpass_url: str, retries: int = 
                 break
             except (urllib.error.URLError, json.JSONDecodeError) as exc:
                 last_error = exc
-                time.sleep(10 * (attempt + 1))  # Overpass limita a taxa de requisições
+                time.sleep(10 * (attempt + 1))
         if data is None:
             raise ReferenceDataError(f"Não foi possível obter os prédios do OpenStreetMap: {last_error}")
         with open(path, "w", encoding="utf-8") as fh:

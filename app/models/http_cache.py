@@ -19,7 +19,7 @@ class HttpError(RuntimeError):
 
 
 def http_get(url: str, timeout: int = 120) -> bytes:
-    """GET simples (segue redirects). Erros HTTP viram HttpError com o código."""
+    """GET simples (segue redirects)."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:

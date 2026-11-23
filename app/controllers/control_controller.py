@@ -16,7 +16,7 @@ from app.models.sentinel import SentinelRepository
 
 control_bp = Blueprint("control", __name__)
 
-MIN_YEAR = 2017   # Sentinel-2A e 2B juntos (revisita de 5 dias) a partir de 2017
+MIN_YEAR = 2017
 
 
 def _repo() -> AnalysisRepository:
@@ -27,7 +27,7 @@ def _service(repo: AnalysisRepository) -> ChangeDetectionService:
     cfg = current_app.config
     return ChangeDetectionService(repo, SentinelRepository(cfg["STAC_URL"], cfg["STAC_COLLECTION"], max_aot=cfg.get("MAX_AOT")),
                                   target_resolution=cfg["TARGET_RESOLUTION"], max_dim=cfg["MAX_DIM"],
-                                  osm_reader=osm_reader(cfg))   # controles: mesma regra de área construída do evento
+                                  osm_reader=osm_reader(cfg))
 
 
 def _summary(control) -> dict:
@@ -66,11 +66,11 @@ def start_controls(analysis_id: str):
         if year in existing:
             continue
         control = build_year_control(event, year)
-        event.control_ids = list(event.control_ids or []) + [control.id]   # vínculo evento → controles
+        event.control_ids = list(event.control_ids or []) + [control.id]
         created.append(control)
     repo.save(event)
     for control in created:
-        service.start(control)                                             # cada controle guarda control_of
+        service.start(control)
     return jsonify(controls=[_summary(c) for c in find_controls(repo, event)]), 202 if created else 200
 
 
@@ -95,7 +95,7 @@ def _start_auto(repo, event, event_year: int, refazer: bool):
             repo.delete(c.id)
         event.control_ids, event.control_id, existing = [], None, []
     ok_years = []
-    for c in existing:   # regra objetiva também para controles feitos antes dela
+    for c in existing:
         vf = ((c.result or {}).get("statistics") or {}).get("valid_fraction")
         if c.status == "done" and vf is not None and vf < min_valid and not c.control_excluded:
             c.control_excluded = {"reason": f"Regra automática: só {100 * vf:.0f}% do retângulo válido nas duas "
@@ -113,7 +113,7 @@ def _start_auto(repo, event, event_year: int, refazer: bool):
         fresh.control_ids = list(fresh.control_ids or []) + [control.id]
         repo.save(fresh)
         service.repository.save(control)
-        service.run(control)           # em sequência: um controle por vez (memória da VM)
+        service.run(control)
         return control
 
     def worker():

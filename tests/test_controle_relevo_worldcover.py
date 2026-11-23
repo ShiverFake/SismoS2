@@ -43,7 +43,7 @@ def test_control_same_options_dates_one_year_earlier_and_linked():
 
 
 def test_control_of_old_analysis_without_topo_keeps_topo_off():
-    ev = _event(result={})   # análise feita antes da correção topográfica existir
+    ev = _event(result={})
     assert build_control(ev).topo_correction is False
 
 
@@ -51,7 +51,6 @@ def test_overlap_stats_counts_only_common_valid_pixels():
     ev = np.array([[2, 2, 0, 0, 1, NODATA]], np.uint8)
     ct = np.array([[2, 0, 4, 0, NODATA, 3]], np.uint8)
     s = overlap_stats(ev, ct, pixel_area_m2=100.0)
-    # comuns: colunas 0–3 (4 px). Evento mudou em 0 e 1 → 50%; controle em 0 e 2 → 50%; nos dois: 0
     assert s["event_changed_percent"] == 50.0 and s["control_changed_percent"] == 50.0
     assert s["both_changed_km2"] == pytest.approx(100 / 1e6)
     assert s["both_percent_of_event_change"] == 50.0
@@ -62,23 +61,21 @@ def test_overlap_stats_counts_only_common_valid_pixels():
 # ================================================ 2) CORREÇÃO TOPOGRÁFICA
 def _plane(rise_east=0.0, rise_north=0.0, n=40, res=10.0):
     rows, cols = np.indices((n, n)).astype(np.float64)
-    # linhas crescem para o SUL: subir para o norte = diminuir com a linha
     return (cols * res * rise_east - rows * res * rise_north).astype(np.float32)
 
 
 def test_slope_and_aspect_of_synthetic_planes():
     slope, aspect = slope_aspect(_plane(rise_east=0.1), 10.0)
     assert np.degrees(slope[20, 20]) == pytest.approx(math.degrees(math.atan(0.1)), abs=0.01)
-    assert np.degrees(aspect[20, 20]) == pytest.approx(270, abs=0.01)   # sobe p/ leste → virada p/ oeste
+    assert np.degrees(aspect[20, 20]) == pytest.approx(270, abs=0.01)
     _, aspect = slope_aspect(_plane(rise_north=0.2), 10.0)
-    assert np.degrees(aspect[20, 20]) == pytest.approx(180, abs=0.01)   # sobe p/ norte → virada p/ sul
+    assert np.degrees(aspect[20, 20]) == pytest.approx(180, abs=0.01)
 
 
 def test_illumination_flat_and_facing_sun():
     flat = np.zeros((2, 2), np.float32)
     cos_i = illumination(flat, flat, sun_azimuth_deg=158, sun_elevation_deg=31)
     assert np.allclose(cos_i, math.cos(math.radians(59)))
-    # encosta de 59° virada exatamente para o sol → sol perpendicular → cos(i) = 1
     slope = np.full((1, 1), math.radians(59), np.float32)
     aspect = np.full((1, 1), math.radians(158), np.float32)
     assert illumination(slope, aspect, 158, 31)[0, 0] == pytest.approx(1.0, abs=1e-5)
@@ -90,13 +87,12 @@ def test_c_correction_removes_illumination_effect():
     slope = np.radians(rng.uniform(0, 35, (n, n))).astype(np.float32)
     aspect = np.radians(rng.uniform(0, 360, (n, n))).astype(np.float32)
     cos_i = illumination(slope, aspect, 158, 31)
-    true_refl = 0.05 + 0.25 * math.cos(math.radians(59))   # o que o pixel teria em terreno plano
-    # o brilho observado depende da iluminação: ρ = 0,05 + 0,25·cos(i)
+    true_refl = 0.05 + 0.25 * math.cos(math.radians(59))
     bands = {b: (0.05 + 0.25 * cos_i + rng.normal(0, 0.002, (n, n))).astype(np.float32) for b in BANDS}
     corrected, coeffs = c_correction(bands, cos_i, 31, np.ones((n, n), bool), slope)
-    assert np.std(corrected["red"]) < 0.25 * np.std(bands["red"])          # variação por relevo some
-    assert np.mean(corrected["red"]) == pytest.approx(true_refl, abs=0.01)  # volta ao valor de terreno plano
-    assert coeffs["red"]["c"] == pytest.approx(0.05 / 0.25, abs=0.02)       # c = b/m
+    assert np.std(corrected["red"]) < 0.25 * np.std(bands["red"])
+    assert np.mean(corrected["red"]) == pytest.approx(true_refl, abs=0.01)
+    assert coeffs["red"]["c"] == pytest.approx(0.05 / 0.25, abs=0.02)
     assert coeffs["red"]["r"] > 0.9
 
 
@@ -106,7 +102,7 @@ def test_c_correction_skips_band_without_relationship():
     slope = np.radians(rng.uniform(6, 30, (n, n))).astype(np.float32)
     aspect = np.radians(rng.uniform(0, 360, (n, n))).astype(np.float32)
     cos_i = illumination(slope, aspect, 158, 31)
-    flat_band = {"red": np.full((n, n), 0.1, np.float32)}   # sem relação com cos(i) (m ≈ 0)
+    flat_band = {"red": np.full((n, n), 0.1, np.float32)}
     out, coeffs = c_correction(flat_band, cos_i, 31, np.ones((n, n), bool), slope)
     assert coeffs["red"]["c"] is None and np.array_equal(out["red"], flat_band["red"])
 
@@ -121,14 +117,11 @@ def test_steep_share():
 
 # ============================================================= 3) WORLDCOVER
 def test_worldcover_tile_names():
-    assert worldcover_tiles((36.12, 36.17, 36.20, 36.24)) == ["N36E036"]          # Antakya
-    assert worldcover_tiles((-8.25, 30.95, -8.10, 31.06)) == ["N30W009"]          # Marrocos
+    assert worldcover_tiles((36.12, 36.17, 36.20, 36.24)) == ["N36E036"]
+    assert worldcover_tiles((-8.25, 30.95, -8.10, 31.06)) == ["N30W009"]
     assert tile_name(-3, -9) == "S03W009"
-    # bbox que cruza a linha de 39°E → dois tiles
     assert worldcover_tiles((38.9, 36.1, 39.1, 36.2)) == ["N36E036", "N36E039"]
-    # cruza o equador e Greenwich → quatro tiles
     assert sorted(worldcover_tiles((-0.5, -0.5, 0.5, 0.5))) == ["N00E000", "N00W003", "S03E000", "S03W003"]
-    # termina exatamente na borda → não pede o tile vizinho
     assert worldcover_tiles((36.5, 36.5, 39.0, 37.0)) == ["N36E036"]
 
 
@@ -141,19 +134,19 @@ def _vegetated(shape, seed):
 def test_soil_class_split_by_urban_mask():
     shape = (60, 60)
     before = _vegetated(shape, 1)
-    before["nir"][:] = 0.06   # NDVI baixo antes (≤ 0,3) → não vira "perda de vegetação"
+    before["nir"][:] = 0.06
     after = {b: v.copy() for b, v in _vegetated(shape, 2).items()}
     after["nir"][:] = 0.06
-    for sl in ((slice(5, 15), slice(5, 15)), (slice(40, 50), slice(40, 50))):   # dois blocos de "entulho"
+    for sl in ((slice(5, 15), slice(5, 15)), (slice(40, 50), slice(40, 50))):
         after["swir16"][sl], after["red"][sl], after["blue"][sl] = 0.40, 0.25, 0.20
     urban = np.zeros(shape, bool)
-    urban[:30] = True          # só o primeiro bloco está em área construída
+    urban[:30] = True
     valid = np.ones(shape, bool)
     res = detect_changes(before, after, valid, ChangeParams(normalize=False), urban=urban)
-    assert (res.classes[5:15, 5:15] == 2).mean() > 0.9     # urbano → possível dano em construções
-    assert (res.classes[40:50, 40:50] == 5).mean() > 0.9   # fora → solo exposto / possível deslizamento
+    assert (res.classes[5:15, 5:15] == 2).mean() > 0.9
+    assert (res.classes[40:50, 40:50] == 5).mean() > 0.9
     res_no_wc = detect_changes(before, after, valid, ChangeParams(normalize=False))
-    assert (res_no_wc.classes[40:50, 40:50] == 2).mean() > 0.9   # sem WorldCover: comportamento antigo
+    assert (res_no_wc.classes[40:50, 40:50] == 2).mean() > 0.9
 
 
 # ===================================================== 4) ROCHA CLARA × NUVEM
@@ -169,30 +162,29 @@ def _scene(scl, b11):
 
 def test_bright_quarry_flagged_as_cloud_in_both_dates_becomes_valid():
     scl = np.full((21, 21), 5, np.uint8)
-    scl[10, 10] = 9                                  # "nuvem" no mesmo pixel nas duas datas
+    scl[10, 10] = 9
     b11 = np.full((21, 21), 0.2, np.float32); b11[10, 10] = 0.45
     before, after = _scene(scl.copy(), b11), _scene(scl.copy(), b11)
-    assert not before.clear_mask[10, 10] and not before.clear_mask[7, 7]   # antes: nuvem + borda de 4 px
+    assert not before.clear_mask[10, 10] and not before.clear_mask[7, 7]
     bright = bright_fixed_surface([before], [after])
     assert bright[10, 10] and bright.sum() == 1
     apply_fixed_bright([before, after], bright)
-    assert before.clear_mask[10, 10] and after.clear_mask[10, 10]          # pedreira volta a ser válida
-    assert before.clear_mask[7, 7] and before.clear_fraction == 1.0       # e não gera borda dilatada
+    assert before.clear_mask[10, 10] and after.clear_mask[10, 10]
+    assert before.clear_mask[7, 7] and before.clear_fraction == 1.0
 
 
 def test_real_cloud_is_not_turned_into_bright_surface():
     scl_b = np.full((5, 5), 5, np.uint8); scl_b[2, 2] = 9
-    scl_a = np.full((5, 5), 5, np.uint8)              # na outra data o pixel está limpo → nuvem real
+    scl_a = np.full((5, 5), 5, np.uint8)
     b11 = np.full((5, 5), 0.5, np.float32)
     assert not bright_fixed_surface([_scene(scl_b, b11)], [_scene(scl_a, b11)]).any()
-    # nuvem nas duas datas, mas SWIR baixo (≤ 0,3) → não é rocha clara
     scl_a[2, 2] = 8
     dark = np.full((5, 5), 0.2, np.float32)
     assert not bright_fixed_surface([_scene(scl_b, dark)], [_scene(scl_a, dark)]).any()
 
 
 def test_bright_rule_ignores_shadow_and_cirrus():
-    scl = np.full((5, 5), 5, np.uint8); scl[2, 2] = 10   # cirrus nas duas datas
+    scl = np.full((5, 5), 5, np.uint8); scl[2, 2] = 10
     b11 = np.full((5, 5), 0.5, np.float32)
     assert not bright_fixed_surface([_scene(scl, b11)], [_scene(scl.copy(), b11)]).any()
 
@@ -207,7 +199,6 @@ def test_bright_rule_with_composite_requires_cloud_in_every_scene():
 
 
 def test_c_correction_skips_band_with_weak_correlation():
-    # brilho dominado pelo uso do solo (ruído grande), relação fraca com a iluminação → não corrige
     rng = np.random.default_rng(2)
     n = 120
     slope = np.radians(rng.uniform(6, 30, (n, n))).astype(np.float32)
@@ -228,8 +219,7 @@ def test_overlap_stats_urban_on_common_area():
     ev = np.array([[2, 2, 0, 5, NODATA]], np.uint8)
     ct = np.array([[0, 0, 0, 5, 0]], np.uint8)
     urban = np.array([[True, True, True, False, True]])
-    s = overlap_stats(ev, ct, 1e6, urban)   # pixels de 1 km² (as áreas são arredondadas em km²)
-    # área urbana comum: colunas 0–2 (a 4 é sem dado no evento). Evento mudou 2/3, controle 0/3
+    s = overlap_stats(ev, ct, 1e6, urban)
     assert s["urban_common_km2"] == pytest.approx(3.0)
     assert s["event_urban_changed_percent"] == pytest.approx(66.667, abs=0.01)
     assert s["control_urban_changed_percent"] == 0.0

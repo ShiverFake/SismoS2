@@ -1,4 +1,4 @@
-// Página de resultado: acompanha o processamento e exibe as camadas no Leaflet.
+// Página de resultado
 (function () {
   const $ = (id) => document.getElementById(id);
   const id = window.ANALYSIS_ID;
@@ -7,14 +7,12 @@
 
   const base = SismoS2.baseLayers();
   const map = L.map("map", { layers: [base["Satélite (Esri)"]], preferCanvas: true });
-  SismoS2.map = map; // usado por validation.js
+  SismoS2.map = map;
   let areaBounds = SismoS2.bboxToBounds(window.ANALYSIS_BBOX);
   L.control.scale({ imperial: false }).addTo(map);
   const aoi = L.rectangle(areaBounds, { color: "#ef4444", weight: 2, fill: false, dashArray: "6 4" }).addTo(map);
 
-  // Enquadra a área analisada. O invalidateSize() é essencial: o mapa é criado antes de o
-  // layout (barra lateral + flex) definir o tamanho final do contêiner, e sem ele o Leaflet
-  // calcula o zoom para um contêiner menor e a área aparece pequena.
+  // Enquadra a área analisada
   function fitArea(animate) {
     map.invalidateSize();
     map.fitBounds(areaBounds, { padding: [12, 12], maxZoom: 17, animate: !!animate });
@@ -37,22 +35,19 @@
   });
   new FitControl().addTo(map);
 
-  // Barra de cores das camadas contínuas (ΔNDVI e magnitude)
   const colorbarControl = L.control({ position: "bottomright" });
   colorbarControl.onAdd = () => {
     const div = L.DomUtil.create("div", "colorbars");
     div.hidden = true;
-    L.DomEvent.disableClickPropagation(div); // clicar na legenda não consulta pixel
+    L.DomEvent.disableClickPropagation(div);
     return div;
   };
   colorbarControl.addTo(map);
   let scales = null;
 
-  // group "base": imagens (checkbox, uma por vez) · "analysis": seleção única (radio)
-  // · "mask": hachura dos pixels sem informação (checkbox independente)
   const LAYERS = [
-    { key: "before", file: "before.png", label: "Imagem antes (cor verdadeira)", group: "base" },
-    { key: "after", file: "after.png", label: "Imagem depois (cor verdadeira)", group: "base" },
+    { key: "before", file: "before.png", label: "Foto de satélite – antes", group: "base" },
+    { key: "after", file: "after.png", label: "Foto de satélite – depois", group: "base" },
     { key: "change", file: "change.png", label: "Mapa de mudanças (classes)", group: "analysis" },
     { key: "dndvi", file: "dndvi.png", label: "ΔNDVI (depois − antes)", group: "analysis" },
     { key: "magnitude", file: "magnitude.png", label: "Magnitude CVA", group: "analysis" },
@@ -70,12 +65,10 @@
         $("progress-msg").textContent = a.message;
         if (SismoS2.updateProcSteps) SismoS2.updateProcSteps(a.progress);
         if (a.status === "done") {
-          // terminou com a página aberta: recarrega para mostrar KPIs e abas montados no servidor
           if (wasProcessing) { window.location.reload(); return; }
           return render(a);
         }
         if (a.status === "error") {
-          // a tela de processamento continua, mas mostra o erro no lugar da barra
           $("progress-box").querySelector(".progress").hidden = true;
           $("proc-steps").hidden = true;
           $("progress-msg").hidden = true;
@@ -101,8 +94,6 @@
     enableProbe(a);
     const opacity = $("opacity").value / 100;
 
-    // Camadas: imagens antes/depois = checkbox (uma por vez); análise = radio (seleção única);
-    // hachura de nuvem/sem dado = checkbox independente, sempre por cima.
     const list = $("layer-list");
     const groupTitle = { base: "Imagens", analysis: "Camada de análise", mask: "Máscara" };
     let lastGroup = null;
@@ -141,7 +132,7 @@
       aoi.bringToFront();
     });
     toggle("after", true);
-    selectAnalysisLayer("none");   // a camada padrão é a prioridade de vistoria (priority.js); as classes são opcionais
+    selectAnalysisLayer("none");
     toggle("mask", true);
 
     $("opacity").addEventListener("input", (ev) => {
@@ -250,7 +241,6 @@
     const span = sc.max - sc.min;
     const pos = (v) => `${(100 * (v - sc.min)) / span}%`;
     const grad = sc.stops.map(([p, c]) => `${c} ${(100 * p).toFixed(1)}%`).join(", ");
-    // ΔNDVI: a faixa central transparente fica marcada com hachura sobre o gradiente
     const fade = key === "dndvi" && sc.fade
       ? `<div class="cb-fade" style="left:${pos(-sc.fade[0])};width:calc(${pos(sc.fade[0])} - ${pos(-sc.fade[0])})"></div>` : "";
     const marker = key === "magnitude"
@@ -264,7 +254,7 @@
 
   // ---- clique no mapa: valores do pixel
   function enableProbe(a) {
-    if (SismoS2.STATIC) return;   // a leitura do pixel precisa do servidor (bandas salvas)
+    if (SismoS2.STATIC) return;
     map.getContainer().classList.add("probe");
     const highlight = L.rectangle([[0, 0], [0, 0]], { color: "#fff", weight: 2, fill: false, interactive: false });
     map.on("click", async (e) => {
@@ -276,7 +266,6 @@
         const p = await res.json();
         if (!res.ok) throw new Error(p.error || "Erro ao consultar o pixel");
         if (!p.inside) { popup.setContent("Fora da área analisada."); map.removeLayer(highlight); return; }
-        // destaca o pixel (~10 m) consultado
         const d = (a.result.grid.resolution_m || 10) / 2;
         const dLat = d / 110540, dLng = d / (111320 * Math.cos((lat * Math.PI) / 180));
         highlight.setBounds([[lat - dLat, lng - dLng], [lat + dLat, lng + dLng]]).addTo(map);
@@ -348,14 +337,13 @@
 
   function showDelete() {
     const btn = $("delete-btn");
-    // em caso de erro o botão fica fora da seção de resultados
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";
     const dialog = $("delete-dialog");
     btn.addEventListener("click", () => {
       $("delete-error").hidden = true;
       dialog.showModal();
-      $("delete-cancel").focus(); // foco no botão seguro
+      $("delete-cancel").focus();
     });
     $("delete-cancel").addEventListener("click", () => dialog.close());
     $("delete-confirm").addEventListener("click", async () => {

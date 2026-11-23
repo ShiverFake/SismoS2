@@ -32,20 +32,20 @@ class Analysis:
     threshold_method: str = "kstd"
     k: float = 2.0
     min_region_px: int = 6
-    median_composite: bool = False   # mediana de até 3 cenas por período
-    topo_correction: bool = True     # C-correction com o Copernicus DEM
+    median_composite: bool = False
+    topo_correction: bool = True
     event_id: Optional[str] = None
-    control_id: Optional[str] = None   # análise de controle (ano anterior) desta análise
-    control_of: Optional[str] = None   # se esta É um controle: id da análise do evento
-    preferred_tile: Optional[str] = None  # tile MGRS a preferir na cena "antes" (o controle usa o do evento)
-    control_ids: List[str] = field(default_factory=list)  # controles de vários anos deste evento
-    control_year: Optional[int] = None    # se esta É um controle: o ano
-    pair_window: Optional[dict] = None    # controle: janela e intervalo-alvo para escolher o par de cenas
-    control_excluded: Optional[dict] = None  # controle fora da média: {"reason", "at", "flags"}
-    ems_activation: Optional[str] = None  # ativação do Copernicus EMS vinculada (ex.: EMSR695)
-    ems_aoi: Optional[int] = None         # AOI dessa ativação com o produto de grading
-    featured: bool = False                # "Destacar": fica no topo da galeria e alimenta o comparador do início
-    status: str = "pending"          # pending | processing | done | error
+    control_id: Optional[str] = None
+    control_of: Optional[str] = None
+    preferred_tile: Optional[str] = None
+    control_ids: List[str] = field(default_factory=list)
+    control_year: Optional[int] = None
+    pair_window: Optional[dict] = None
+    control_excluded: Optional[dict] = None
+    ems_activation: Optional[str] = None
+    ems_aoi: Optional[int] = None
+    featured: bool = False
+    status: str = "pending"
     progress: int = 0
     message: str = "Na fila"
     error: Optional[str] = None

@@ -13,39 +13,38 @@ from app.models.grid_eval import (auc_score, build_cells, cells_geojson, grid_me
 
 
 def _scene():
-    """Grade 20×20 px; células de 10 px → 4 células. Mudança só no canto superior esquerdo."""
+    """Grade 20×20 px; células de 10 px → 4 células."""
     h = w = 20
     in_area = np.ones((h, w), bool)
     valid = np.ones((h, w), bool)
-    valid[10:, 10:] = False                       # célula inferior direita sem dado → sai
+    valid[10:, 10:] = False
     changed = np.zeros((h, w), bool)
-    changed[:10, :10] = True                      # célula 0: 100% de mudança
-    changed[:10, 10:12] = True                    # célula 1: 20%
+    changed[:10, :10] = True
+    changed[:10, 10:12] = True
     magnitude = changed.astype(float)
-    # prédios: 4 por célula (3 do OSM + 1 ponto da referência); célula 0 tem 3 com dano
     rows, cols, labels, is_osm = [], [], [], []
     for r0, c0, dmg in ((0, 0, 3), (0, 10, 1), (10, 0, 0), (10, 10, 2)):
         for j in range(4):
             rows.append(r0 + 1 + j); cols.append(c0 + 1)
             labels.append(1 if j < dmg else 0); is_osm.append(j < 3)
-    rows.append(11); cols.append(1); labels.append(-1); is_osm.append(True)   # "possivelmente": fora da conta
+    rows.append(11); cols.append(1); labels.append(-1); is_osm.append(True)
     return in_area, valid, changed, magnitude, *(np.array(x) for x in (rows, cols, labels, is_osm))
 
 
 def test_build_cells_counts_and_filters():
     in_area, valid, changed, magnitude, rows, cols, labels, is_osm = _scene()
     c = build_cells(10, in_area, valid, changed, magnitude, rows, cols, labels, is_osm)
-    assert c["id"].tolist() == [0, 1, 2]                                    # célula 3 sem pixels válidos
+    assert c["id"].tolist() == [0, 1, 2]
     assert c["change_share"].tolist() == pytest.approx([1.0, 0.2, 0.0])
     assert c["damage_share"].tolist() == pytest.approx([0.75, 0.25, 0.0])
-    assert c["n_buildings"].tolist() == [4, 4, 4]                           # o "possivelmente" não entra
+    assert c["n_buildings"].tolist() == [4, 4, 4]
     assert c["n_osm"].tolist() == [3, 3, 4]
 
 
 def test_cells_need_three_osm_buildings():
     in_area, valid, changed, magnitude, rows, cols, labels, is_osm = _scene()
     is_osm = np.zeros_like(is_osm)
-    is_osm[:2] = True                                                       # só 2 prédios do OSM na célula 0
+    is_osm[:2] = True
     c = build_cells(10, in_area, valid, changed, magnitude, rows, cols, labels, is_osm)
     assert len(c["id"]) == 0
 
@@ -53,7 +52,7 @@ def test_cells_need_three_osm_buildings():
 def test_auc_and_roc():
     scores = np.array([0.9, 0.8, 0.3, 0.2, 0.1])
     pos = np.array([True, True, False, True, False])
-    assert auc_score(scores, pos) == pytest.approx(5 / 6)                   # 5 de 6 pares bem ordenados
+    assert auc_score(scores, pos) == pytest.approx(5 / 6)
     assert auc_score(scores, np.ones(5, bool)) is None
     roc = roc_curve(scores, pos)
     assert roc[0] == [0.0, 0.0] and roc[-1] == [1.0, 1.0]
@@ -72,7 +71,7 @@ def test_grid_metrics_end_to_end(tmp_path):
     rng = np.random.default_rng(0)
     n = 200
     damage = rng.beta(0.6, 3, n)
-    change = np.clip(0.5 * damage + rng.normal(0, 0.05, n), 0, 1)          # mudança acompanha o dano
+    change = np.clip(0.5 * damage + rng.normal(0, 0.05, n), 0, 1)
     nb = rng.integers(3, 20, n)
     cells = {"id": np.arange(n), "row": np.arange(n) // 20, "col": np.arange(n) % 20, "n_buildings": nb,
              "n_osm": nb, "n_damaged": np.round(damage * nb).astype(int), "damage_share": damage,
@@ -91,7 +90,7 @@ def test_grid_metrics_end_to_end(tmp_path):
 def test_cells_geojson_polygons():
     in_area, valid, changed, magnitude, rows, cols, labels, is_osm = _scene()
     c = build_cells(10, in_area, valid, changed, magnitude, rows, cols, labels, is_osm)
-    tr = Affine(10.0, 0, 0, 0, -10.0, 1000.0)                               # EPSG:3857 perto de (0°, 0°)
+    tr = Affine(10.0, 0, 0, 0, -10.0, 1000.0)
     gj = cells_geojson(c, 10, tr)
     assert len(gj["features"]) == 3
     f0 = gj["features"][0]
@@ -102,13 +101,10 @@ def test_cells_geojson_polygons():
 
 def test_triage_ties_use_expected_value():
     from app.models.grid_eval import expected_capture
-    # 1 célula com mudança e 9 empatadas em 0; o dano está numa das empatadas (a última na grade)
     change = np.array([0.5] + [0.0] * 9)
     dmg = np.array([0] * 9 + [9])
-    # visitar 2 células: a de 0,5 + 1 das 9 empatadas → esperado 9 × 1/9 = 1 prédio
     assert expected_capture(change, dmg, 2) == pytest.approx(1.0)
     t = triage_table(change, dmg, fractions=(0.2,))
     assert t[0]["damaged_buildings"] == pytest.approx(1.0) and t[0]["cells_tied_at_cutoff"] == 9
-    # com empate total, o sistema empata com o aleatório (e não fica pior por causa da ordem da grade)
     flat = np.zeros(10)
     assert triage_table(flat, dmg, fractions=(0.3,))[0]["share_of_damaged"] == pytest.approx(0.3)

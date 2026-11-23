@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Instala dependências e cria o ambiente virtual na VM (Ubuntu/Debian).
-# Uso:  bash setup_vm.sh
+# Instala dependências e cria o ambiente virtual na VM
 set -euo pipefail
 cd "$(dirname "$0")"
 

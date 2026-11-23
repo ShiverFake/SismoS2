@@ -1,8 +1,4 @@
-"""Model: uso do solo (ESA WorldCover 2021, 10 m) lido direto do bucket público na AWS.
-
-Usado para separar "solo exposto / entulho" DENTRO de área construída (possível dano em
-construções) de "solo exposto" FORA dela (possível deslizamento).
-"""
+"""Model: uso do solo (ESA WorldCover 2021, 10 m) lido direto do bucket público na AWS."""
 from __future__ import annotations
 
 import logging
@@ -31,14 +27,14 @@ def tile_name(lat0: int, lon0: int) -> str:
 def worldcover_tiles(bbox) -> List[str]:
     """Tiles de 3°×3° que cobrem o bbox (oeste, sul, leste, norte) — pode ser mais de um."""
     west, south, east, north = bbox
-    eps = 1e-9  # um bbox que termina exatamente na borda não precisa do tile vizinho
+    eps = 1e-9
     lats = range(math.floor(south / TILE_DEG) * TILE_DEG, math.floor((north - eps) / TILE_DEG) * TILE_DEG + 1, TILE_DEG)
     lons = range(math.floor(west / TILE_DEG) * TILE_DEG, math.floor((east - eps) / TILE_DEG) * TILE_DEG + 1, TILE_DEG)
     return [tile_name(la, lo) for la in lats for lo in lons]
 
 
 def read_worldcover(grid) -> Optional[np.ndarray]:
-    """Classes do WorldCover na grade da análise (uint8; 0 = sem dado). None se nada foi lido."""
+    """Classes do WorldCover na grade da análise (uint8; 0 = sem dado)."""
     from app.models.sentinel import GDAL_ENV
 
     out = np.zeros((grid.height, grid.width), dtype=np.uint8)
@@ -49,7 +45,7 @@ def read_worldcover(grid) -> Optional[np.ndarray]:
                         src, crs=grid.crs, transform=grid.transform, width=grid.width, height=grid.height,
                         resampling=Resampling.nearest, nodata=0) as vrt:
                     part = vrt.read(1)
-            except RasterioIOError as exc:  # tiles só de oceano não existem no bucket
+            except RasterioIOError as exc:
                 log.info("WorldCover %s indisponível: %s", tile, exc)
                 continue
             fill = (out == 0) & (part > 0)

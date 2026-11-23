@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional, Sequence
 
 WINDOW_DAYS = 35
-EPICENTER_HALF_DEG = 0.05      # sem AOI (só o epicentro): retângulo de ~0,1° em volta
+EPICENTER_HALF_DEG = 0.05
 
 
 def event_date(iso: str) -> date:

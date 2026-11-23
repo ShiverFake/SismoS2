@@ -29,7 +29,6 @@ def test_normalized_difference_handles_zero():
 
 
 def test_normalized_difference_bounded_with_negative_reflectance():
-    # caso real: offset -0,1 deixa pixels escuros com reflectância ~0 ou negativa
     out = normalized_difference(np.array([0.001, -0.02, 0.3]), np.array([-0.00095, 0.01995, 0.05]))
     assert np.isnan(out[0]) and np.isnan(out[1])
     assert np.nanmax(np.abs(out)) <= 1.0
@@ -43,8 +42,8 @@ def test_otsu_separates_bimodal():
 
 def test_remove_small_regions():
     mask = np.zeros((20, 20), bool)
-    mask[2, 2] = True            # ruído isolado
-    mask[10:15, 10:15] = True    # região real (25 px)
+    mask[2, 2] = True
+    mask[10:15, 10:15] = True
     cleaned = remove_small_regions(mask, 6)
     assert not cleaned[2, 2]
     assert cleaned[10:15, 10:15].all()
@@ -53,7 +52,6 @@ def test_remove_small_regions():
 def test_landslide_detected_as_vegetation_loss():
     before = vegetated_scene(seed=1)
     after = vegetated_scene(seed=2)
-    # "deslizamento": vegetação vira solo exposto num bloco 20x20
     sl = (slice(40, 60), slice(40, 60))
     after["red"][sl], after["nir"][sl], after["swir16"][sl] = 0.20, 0.25, 0.32
     after["green"][sl], after["blue"][sl], after["swir22"][sl] = 0.16, 0.12, 0.26
@@ -87,7 +85,7 @@ def test_too_few_valid_pixels_raises():
 def test_grid_resolution_and_size_limit():
     g = Grid.from_bbox((36.12, 36.18, 36.22, 36.25), target_resolution=10, max_dim=1500)
     assert g.ground_resolution == pytest.approx(10, rel=0.01)
-    assert 850 < g.width < 950          # ~9 km de largura
+    assert 850 < g.width < 950
     big = Grid.from_bbox((0, 0, 0.3, 0.3), max_dim=500)
     assert max(big.width, big.height) <= 501
 
@@ -113,14 +111,10 @@ class _FakeAsset:
 
 
 @pytest.mark.parametrize("props,bands,expected_offset", [
-    # Earth Search v1: offset já removido dos COGs, mas raster:bands ainda diz -0.1 → NÃO aplicar
     ({"earthsearch:boa_offset_applied": True, "s2:processing_baseline": "05.09"},
      [{"scale": 0.0001, "offset": -0.1}], 0.0),
-    # DN originais da ESA com baseline >= 04.00 → aplicar -0.1
     ({"earthsearch:boa_offset_applied": False, "s2:processing_baseline": "05.09"}, [{"scale": 0.0001}], -0.1),
-    # baseline antiga → sem offset
     ({"earthsearch:boa_offset_applied": False, "s2:processing_baseline": "03.01"}, [{"scale": 0.0001}], 0.0),
-    # provedor sem a indicação: segue raster:bands, ou a baseline se não houver
     ({"s2:processing_baseline": "05.09"}, [{"scale": 0.0001, "offset": -0.1}], -0.1),
     ({"s2:processing_baseline": "04.00"}, None, -0.1),
     ({"s2:processing_baseline": "02.14"}, None, 0.0),
@@ -138,9 +132,9 @@ def test_magnitude_layer_transparent_below_half_threshold(tmp_path):
     mag = np.array([[0.01, 0.05, 0.12, 0.30, np.nan]], dtype=np.float32)
     scale = save_magnitude(mag, str(tmp_path / "m.png"), threshold=0.10)
     alpha = np.asarray(Image.open(tmp_path / "m.png"))[..., 3][0]
-    assert alpha[0] == 0 and alpha[1] == 0          # < 0,5·limiar → transparente
-    assert alpha[2] == 235 and alpha[3] == 235      # acima do limiar → opaco
-    assert alpha[4] == 0                            # sem dado
+    assert alpha[0] == 0 and alpha[1] == 0
+    assert alpha[2] == 235 and alpha[3] == 235
+    assert alpha[4] == 0
     assert scale["min"] == pytest.approx(0.05) and scale["threshold"] == pytest.approx(0.10)
     d = np.array([[0.0, 0.02, -0.3, 0.4]], dtype=np.float32)
     dscale = save_dndvi(d, str(tmp_path / "d.png"))
@@ -148,7 +142,7 @@ def test_magnitude_layer_transparent_below_half_threshold(tmp_path):
     assert da[0] == 0 and da[1] == 0 and da[2] == 235 and da[3] == 235
     sc = legend_scales(dscale, scale)
     assert sc["magnitude"]["stops"][0][0] == 0 and sc["magnitude"]["stops"][-1][0] == 1
-    assert sc["dndvi"]["stops"][2][0] == pytest.approx(0.5)   # zero no meio da barra
+    assert sc["dndvi"]["stops"][2][0] == pytest.approx(0.5)
 
 
 def test_pixel_probe(tmp_path):
@@ -157,9 +151,9 @@ def test_pixel_probe(tmp_path):
     from rasterio.transform import from_origin
     from app.models.pixel_probe import probe
     h, w = 4, 5
-    tr = from_origin(0, 400, 100, 100)   # EPSG:3857, origem perto de (0°, 0°)
+    tr = from_origin(0, 400, 100, 100)
     arrays = {f"{p}_{b}": np.full((h, w), 0.1, np.float16) for p in ("before", "after") for b in BANDS}
-    arrays["before_nir"][2, 3], arrays["after_nir"][2, 3] = 0.5, 0.15     # NDVI 0,667 → 0,2
+    arrays["before_nir"][2, 3], arrays["after_nir"][2, 3] = 0.5, 0.15
     np.savez_compressed(tmp_path / "bands.npz", valid=np.ones((h, w), bool), **arrays)
     prof = dict(driver="GTiff", width=w, height=h, count=1, crs="EPSG:3857", transform=tr)
     cls = np.zeros((h, w), np.uint8); cls[2, 3] = 1
@@ -170,7 +164,7 @@ def test_pixel_probe(tmp_path):
     result = {"grid": {"width": w, "height": h, "transform": list(tr)[:6], "resolution_m": 100},
               "statistics": {"cva_threshold": 0.1}}
     from rasterio.warp import transform as wt
-    lon, lat = wt("EPSG:3857", "EPSG:4326", [350], [150])          # centro do pixel (2, 3)
+    lon, lat = wt("EPSG:3857", "EPSG:4326", [350], [150])
     p = probe(str(tmp_path), result, lat[0], lon[0])
     assert p["inside"] and (p["row"], p["col"]) == (2, 3)
     assert p["ndvi_before"] == pytest.approx(0.667, abs=0.01) and p["ndvi_after"] == pytest.approx(0.2, abs=0.01)

@@ -1,11 +1,11 @@
-"""Ponto de entrada: python run.py  ->  http://<ip-da-vm>:5000"""
+"""Ponto de entrada: python run.py -> http://<ip-da-vm>:5000"""
 import logging
 import os
 
 from app import create_app
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-logging.getLogger("rasterio").setLevel(logging.WARNING)  # silencia "boto3 not available"
+logging.getLogger("rasterio").setLevel(logging.WARNING)
 
 app = create_app()
 
@@ -14,5 +14,5 @@ if __name__ == "__main__":
         host=os.environ.get("HOST", "0.0.0.0"),
         port=int(os.environ.get("PORT", "5000")),
         debug=os.environ.get("FLASK_DEBUG") == "1",
-        use_reloader=False,  # evita duplicar as threads de processamento
+        use_reloader=False,
     )

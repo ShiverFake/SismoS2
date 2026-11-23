@@ -51,19 +51,15 @@ def save_change_map(classes: np.ndarray, path: str) -> None:
     lut = np.zeros((256, 4), dtype=np.uint8)
     for cid, info in CLASSES.items():
         lut[cid] = info["color"]
-    lut[NODATA] = (0, 0, 0, 0)  # nuvem/sem dado: desenhado na camada própria de hachura (mask.png)
+    lut[NODATA] = (0, 0, 0, 0)
     Image.fromarray(lut[classes]).save(path, optimize=True)
 
 
-HATCH_PERIOD = 6   # pixels entre as linhas diagonais
+HATCH_PERIOD = 6
 
 
 def save_mask_hatch(masked: np.ndarray, path: str) -> None:
-    """Pixels mascarados (nuvem, sombra, sem dado) em hachura diagonal cinza semitransparente.
-
-    A hachura deixa claro que ali não há informação (diferente de "sem mudança") sem esconder
-    totalmente o satélite por baixo.
-    """
+    """Pixels mascarados (nuvem, sombra, sem dado) em hachura diagonal cinza semitransparente."""
     rows, cols = np.indices(masked.shape)
     on_line = (rows + cols) % HATCH_PERIOD < 2
     rgba = np.zeros(masked.shape + (4,), dtype=np.uint8)
@@ -73,7 +69,7 @@ def save_mask_hatch(masked: np.ndarray, path: str) -> None:
 
 
 DNDVI_RANGE = (-0.5, 0.5)
-DNDVI_FADE = (0.03, 0.15)   # |ΔNDVI| < 0,03 transparente; opaco a partir de 0,15
+DNDVI_FADE = (0.03, 0.15)
 
 
 def save_dndvi(dndvi: np.ndarray, path: str) -> dict:
@@ -85,11 +81,7 @@ def save_dndvi(dndvi: np.ndarray, path: str) -> dict:
 
 
 def save_magnitude(magnitude: np.ndarray, path: str, threshold: float) -> dict:
-    """Magnitude CVA: transparente abaixo de metade do limiar, opaca a partir do limiar.
-
-    A escala de cores vai de 0,5·limiar até o percentil 99,5, então só as mudanças relevantes
-    ficam coloridas e o satélite continua visível por baixo.
-    """
+    """Magnitude CVA: transparente abaixo de metade do limiar, opaca a partir do limiar."""
     finite = magnitude[np.isfinite(magnitude)]
     low = 0.5 * threshold
     top = float(np.percentile(finite, 99.5)) if finite.size else 2 * threshold
@@ -124,7 +116,7 @@ def save_geotiffs(result: ChangeResult, grid, out_dir: str) -> None:
                    crs=grid.crs, transform=grid.transform, compress="deflate")
     with rasterio.open(os.path.join(out_dir, "change_classes.tif"), "w",
                        dtype="uint8", nodata=NODATA, photometric="palette", **profile) as dst:
-        dst.write_colormap(1, {cid: info["color"] for cid, info in CLASSES.items()})  # antes dos dados
+        dst.write_colormap(1, {cid: info["color"] for cid, info in CLASSES.items()})
         dst.write(result.classes, 1)
     for name, arr in (("dndvi.tif", result.dndvi), ("magnitude.tif", result.magnitude)):
         with rasterio.open(os.path.join(out_dir, name), "w",

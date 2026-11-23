@@ -1,21 +1,4 @@
-"""Model: Copernicus EMS Rapid Mapping (ativações, AOIs e produtos de grading de dano).
-
-Estrutura da API (conferida com curl):
-  lista   GET .../public-activations-info/?limit=&offset=
-          {count, next, previous, results: [{code, name, category, eventTime, activationTime,
-           closed, countries: [str], centroid: "POINT (lon lat)", n_aois, n_products, gdacsId, lastUpdate}]}
-  detalhe GET .../public-activations/?code=EMSR695
-          {count, next, previous, results: [{code, name, category, subCategory, eventTime, closed,
-           countries: [{name}], reportLink, extent (WKT), productsPath,
-           aois: [{number, name, extent (WKT), blpPath,
-                   products: [{type: "GRA"|"DEL"|..., monitoringNumber, downloadPath (.zip),
-                               version: {number, deliveryTime}, images: [...], stats}]}]}]}
-  Ativações anteriores à EMSR656 (ex.: EMSR648, Turquia 2023) respondem 403 ("Authentication
-  credentials were not provided") — não são públicas por esta API.
-
-O produto GRA (.zip) traz builtUpP/builtUpA em GeoJSON (um ponto/polígono por prédio afetado com
-`damage_gra` = Destroyed / Damaged / Possibly damaged) e areaOfInterestA (a área avaliada).
-"""
+"""Model: Copernicus EMS Rapid Mapping (ativações, AOIs e produtos de grading de dano)."""
 from __future__ import annotations
 
 import os
@@ -48,11 +31,11 @@ class EmsAoi:
     number: int
     name: str
     extent_wkt: str
-    gra_download: Optional[str] = None      # produto de grading mais recente (maior monitoringNumber)
+    gra_download: Optional[str] = None
     gra_version: Optional[int] = None
-    gra_image: Optional[str] = None         # sensor + data da imagem usada pelo fotointérprete
+    gra_image: Optional[str] = None
     gra_stats: dict = field(default_factory=dict)
-    gra_extent_wkt: Optional[str] = None    # extent do produto GRA (pode ser menor que a AOI)
+    gra_extent_wkt: Optional[str] = None
 
     @property
     def geometry(self):
@@ -77,7 +60,7 @@ class EmsActivation:
     activation_time: Optional[str]
     closed: bool
     countries: List[str]
-    centroid: Optional[List[float]]          # [lon, lat]
+    centroid: Optional[List[float]]
     n_aois: int = 0
     n_products: int = 0
     report_link: Optional[str] = None
@@ -187,7 +170,7 @@ class EmsRepository:
 
     # ------------------------------------------------- produto de grading (GRA)
     def gra_zip_path(self, code: str, aoi: int) -> str:
-        """Baixa (uma vez só) o .zip do produto GRA da AOI. Cache permanente."""
+        """Baixa (uma vez só) o .zip do produto GRA da AOI."""
         path = os.path.join(self.products_dir, f"{code}_AOI{aoi:02d}_GRA.zip")
         if os.path.exists(path):
             return path
@@ -213,7 +196,6 @@ class EmsRepository:
     def read_grading(self, code: str, aoi: int) -> ReferenceData:
         with open(self.gra_zip_path(code, aoi), "rb") as fh:
             ref = load_zip(fh.read(), f"Copernicus EMS {code} – AOI {aoi:02d}")
-        # restringe também ao extent do produto GRA informado pela API (quando houver)
         try:
             match = next((a for a in self.get_activation(code).aois if a.number == aoi), None)
         except EmsError:

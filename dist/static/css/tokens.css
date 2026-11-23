@@ -1,55 +1,46 @@
-/* SismoS2 — tokens de design.
-   Paleta: azul-marinho profundo (fundo de sala de monitoramento) + vermelho de alerta sísmico.
-   Um único elemento marcante no site: o traço de sismograma do início. O resto é sóbrio. */
+/* SismoS2 — tokens de design */
 :root {
-  /* cores base */
   --navy-950: #071120;
-  --navy-900: #0a1626;   /* fundo */
-  --navy-800: #10223a;   /* superfície */
-  --navy-700: #183152;   /* superfície elevada / campos */
-  --navy-600: #26476e;   /* linhas e bordas */
-  --ink: #e8eef6;        /* texto principal (contraste ≈ 15:1 sobre o fundo) */
-  --ink-muted: #9db0c7;  /* texto secundário (≈ 7:1) */
-  --ink-faint: #6f86a1;  /* rótulos de eixo, notas pequenas (≈ 4,6:1) */
-  --red: #ef4444;        /* destaque: ação principal, sismograma, foco */
+  --navy-900: #0a1626;
+  --navy-800: #10223a;
+  --navy-700: #183152;
+  --navy-600: #26476e;
+  --ink: #e8eef6;
+  --ink-muted: #9db0c7;
+  --ink-faint: #6f86a1;
+  --red: #ef4444;
   --red-strong: #dc2626;
   --red-soft: rgba(239, 68, 68, .14);
 
-  /* status */
   --ok: #34c47c;   --ok-bg: rgba(52, 196, 124, .14);
   --warn: #f2b84b; --warn-bg: rgba(242, 184, 75, .14);
   --bad: #f05252;  --bad-bg: rgba(240, 82, 82, .15);
   --info: #6aa7ff; --info-bg: rgba(106, 167, 255, .14);
 
-  /* tipografia — Inter, escala de terça maior (1,25) */
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fs-xs: .75rem;   /* 12 */
-  --fs-sm: .875rem;  /* 14 */
-  --fs-md: 1rem;     /* 16 */
-  --fs-lg: 1.25rem;  /* 20 */
-  --fs-xl: 1.5625rem;/* 25 */
-  --fs-2xl: 1.953rem;/* 31 */
-  --fs-3xl: 2.441rem;/* 39 */
-  --fs-4xl: 3.052rem;/* 49 */
+  --fs-xs: .75rem;
+  --fs-sm: .875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5625rem;
+  --fs-2xl: 1.953rem;
+  --fs-3xl: 2.441rem;
+  --fs-4xl: 3.052rem;
   --lh-tight: 1.15;
   --lh-body: 1.55;
 
-  /* espaçamento (base 4 px) */
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 72px;
 
-  /* raios por hierarquia: painel > controle > selo */
   --r-panel: 14px;
   --r-ctrl: 8px;
   --r-pill: 999px;
 
-  /* sombras: só para o que flutua sobre o mapa */
   --shadow-float: 0 10px 30px rgba(3, 9, 20, .55), 0 1px 0 rgba(255, 255, 255, .04) inset;
 
   --header-h: 60px;
   --content-w: 1160px;
   --focus: 0 0 0 3px rgba(239, 68, 68, .55);
 
-  /* apelidos usados pelo JavaScript e pelos widgets antigos */
   --bg: var(--navy-900);
   --panel: var(--navy-800);
   --panel-2: var(--navy-700);

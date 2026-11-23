@@ -1,9 +1,4 @@
-"""Completa buildings.npz (WorldCover 50 + prédios do OSM) das análises e regera a prioridade e as imagens.
-
-Uso (na VM):  .venv/bin/python tools/regerar_construcoes.py [id ...]
-Para cada análise principal concluída, mostra quantas células estavam no ranking antes e depois da
-regra "só células com construções".
-"""
+"""Completa buildings.npz (WorldCover 50 + prédios do OSM) das análises e regera a prioridade e as imagens."""
 from __future__ import annotations
 
 import json

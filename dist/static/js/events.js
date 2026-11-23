@@ -1,4 +1,4 @@
-// Página "Eventos": terremotos do USGS e ativações do Copernicus EMS no mapa + lista com filtros.
+// Página "Eventos"
 (function () {
   const $ = (id) => document.getElementById(id);
   const fmt = (n, d = 1) => (n == null ? "—" : Number(n).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }));
@@ -12,7 +12,7 @@
   const quakeLayer = L.layerGroup().addTo(map);
   const emsLayer = L.layerGroup().addTo(map);
 
-  // raio proporcional à energia aproximada (cresce ~2× a cada grau de magnitude)
+  // raio proporcional à energia aproximada
   const radius = (m) => Math.max(3, 3 * Math.pow(2, (m || 4.5) - 4.5));
   const quakeColor = (m) => (m >= 7 ? "#b91c1c" : m >= 6 ? "#ef4444" : m >= 5.5 ? "#f97316" : "#facc15");
 
@@ -78,7 +78,6 @@
     }
   }
 
-  // vitrine estática: o navegador consulta o USGS direto (o feed e a consulta FDSN liberam CORS)
   const USGS_FEED = { week: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson",
                       month: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson" };
   async function usgsDirect(p) {

@@ -1,9 +1,4 @@
-"""Corrige a acentuação dos nomes das análises já salvas e marca as análises em destaque.
-
-Uso (na VM):  .venv/bin/python tools/corrigir_nomes.py          # só mostra o que mudaria
-              .venv/bin/python tools/corrigir_nomes.py --gravar # grava
-Só o campo "name" (e "featured") de analysis.json é alterado.
-"""
+"""Corrige a acentuação dos nomes das análises já salvas e marca as análises em destaque."""
 from __future__ import annotations
 
 import os
@@ -14,7 +9,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from config import Config  # noqa: E402
 from app.models.analysis import AnalysisRepository  # noqa: E402
 
-# trechos trocados em todos os nomes (inclusive nos controles, que herdam o nome do evento)
 REPLACEMENTS = [
     ("EMSR695 AOI07 (via Eventos)", "Marrocos 2023 – Talat N'Yaaqoub (EMSR695, AOI 07)"),
     ("correcao topografica", "correção topográfica"),
@@ -24,7 +18,7 @@ REPLACEMENTS = [
     ("Marrocos 2023 - ", "Marrocos 2023 – "),
     ("Myanmar 2025 - ", "Myanmar 2025 – "),
 ]
-FEATURED = {"9ea9d74fe815", "47412403ace4"}   # Antakya com correção topográfica e EMSR695
+FEATURED = {"9ea9d74fe815", "47412403ace4"}
 
 
 def fixed(name: str) -> str:

@@ -52,7 +52,6 @@ def test_build_publishes_only_featured_read_only(results):
     for page in ("index.html", "analises/index.html", "eventos/index.html", "metodologia/index.html",
                  "sobre/index.html", f"analise/{star.id}/index.html", f"analise/{ctl.id}/index.html"):
         assert os.path.exists(os.path.join(out, page)), page
-    # dados das rotas /api viraram .json; arquivos copiados, GeoTIFF fora
     assert json.load(open(os.path.join(out, "api", "analises", f"{star.id}.json")))["id"] == star.id
     assert os.path.exists(os.path.join(out, "api", "analises", star.id, "arquivos", "after.png"))
     assert not os.path.exists(os.path.join(out, "api", "analises", star.id, "arquivos", "change_classes.tif"))
@@ -61,15 +60,15 @@ def test_build_publishes_only_featured_read_only(results):
     gallery = open(os.path.join(out, "analises", "index.html"), encoding="utf-8").read()
     assert "Antakya destacada" in gallery and "Outra sem destaque" not in gallery
     assert 'class="star"' not in gallery and "/nova" not in gallery
-    assert 'id="f-text"' in gallery and 'id="f-status"' not in gallery and 'id="f-val"' not in gallery   # só a busca
+    assert 'id="f-text"' in gallery and 'id="f-status"' not in gallery and 'id="f-val"' not in gallery
     assert "Células prioritárias" in gallery and "AUC" in gallery and "Mudança<b>" not in gallery
     page = open(os.path.join(out, "analise", star.id, "index.html"), encoding="utf-8").read()
     assert 'window.SISMOS2_STATIC = { base: "../../" }' in page
     assert 'href="../../static/css/site.css"' in page and 'href="/' not in page and 'src="/' not in page
-    assert "Versão de demonstração" not in page and "nav-demo" not in page       # menu sem aviso
+    assert "Versão de demonstração" not in page and "nav-demo" not in page
     nav = page[page.index('<nav class="nav"'):page.index("</nav>")]
     assert [l for l in ("Início", "Análises", "Eventos", "Metodologia", "Sobre") if l in nav] ==         ["Início", "Análises", "Eventos", "Metodologia", "Sobre"] and "Nova análise" not in nav
-    assert "<span>Refazer</span>" not in page and "/nova" not in page   # sem o botão Refazer
-    assert page.count("no-vitrine") >= 5                       # Excluir, Validar, Rodar controles: ocultos
+    assert "<span>Refazer</span>" not in page and "/nova" not in page
+    assert page.count("no-vitrine") >= 5
     assert "GeoTIFFs não estão publicados" in page
     assert bv.check_links(out) == []

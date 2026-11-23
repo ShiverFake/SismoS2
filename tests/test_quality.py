@@ -16,24 +16,24 @@ BANDS = ("blue", "green", "red", "nir", "swir16", "swir22")
 
 # ----------------------------------------------------------- máscara SCL
 def test_scl_cloud_dilated_by_4_pixels():
-    scl = np.full((21, 21), 4, np.uint8)      # 4 = vegetação (válido)
-    scl[10, 10] = 9                            # um pixel de nuvem alta
+    scl = np.full((21, 21), 4, np.uint8)
+    scl[10, 10] = 9
     clear, water = masks_from_scl(scl, dilation_px=4)
     assert not clear[10, 10]
-    assert not clear[6, 6] and not clear[14, 14]   # 4 px em volta (inclusive diagonal) → inválido
-    assert clear[5, 10] and clear[10, 15]          # 5 px → válido
+    assert not clear[6, 6] and not clear[14, 14]
+    assert clear[5, 10] and clear[10, 15]
     assert not water.any()
 
 
 def test_scl_snow_and_nodata_invalid_but_not_dilated():
-    scl = np.full((11, 11), 5, np.uint8)       # 5 = solo exposto
-    scl[5, 5] = 11                             # neve
-    scl[0, 0] = 0                              # sem dado
-    scl[8, 8] = 6                              # água
+    scl = np.full((11, 11), 5, np.uint8)
+    scl[5, 5] = 11
+    scl[0, 0] = 0
+    scl[8, 8] = 6
     clear, water = masks_from_scl(scl)
     assert not clear[5, 5] and not clear[0, 0]
-    assert clear[5, 6] and clear[0, 1]         # neve/sem dado não são dilatados
-    assert clear[8, 8] and water[8, 8]         # água é válida para a detecção, só sai das estatísticas
+    assert clear[5, 6] and clear[0, 1]
+    assert clear[8, 8] and water[8, 8]
 
 
 # ------------------------------------------------------------ mediana
@@ -49,10 +49,10 @@ def _scene(value, clear, tid="S2A_X", water=None):
 def test_median_composite_ignores_masked_pixels():
     clear_all = np.ones((2, 2), bool)
     cloudy_px = clear_all.copy(); cloudy_px[0, 0] = False
-    s1, s2, s3 = _scene(0.10, clear_all), _scene(0.20, clear_all), _scene(0.90, cloudy_px)  # 0,90 = nuvem
+    s1, s2, s3 = _scene(0.10, clear_all), _scene(0.20, clear_all), _scene(0.90, cloudy_px)
     comp = median_composite([s1, s2, s3])
-    assert comp.bands["red"][0, 0] == pytest.approx(0.15)   # mediana de 0,10 e 0,20 (nuvem ignorada)
-    assert comp.bands["red"][1, 1] == pytest.approx(0.20)   # mediana de 0,10/0,20/0,90
+    assert comp.bands["red"][0, 0] == pytest.approx(0.15)
+    assert comp.bands["red"][1, 1] == pytest.approx(0.20)
     assert comp.clear_mask.all()
     meta = comp.metadata()
     assert meta["n_scenes"] == 3 and len(meta["scenes"]) == 3
@@ -62,7 +62,7 @@ def test_median_composite_pixel_cloudy_everywhere_is_invalid_but_filled():
     cloudy = np.zeros((1, 1), bool)
     comp = median_composite([_scene(0.3, cloudy), _scene(0.5, cloudy)])
     assert not comp.clear_mask[0, 0]
-    assert comp.bands["red"][0, 0] == pytest.approx(0.4)    # preenchido só para a imagem RGB
+    assert comp.bands["red"][0, 0] == pytest.approx(0.4)
 
 
 def test_single_scene_metadata_has_count_one():
@@ -109,7 +109,7 @@ def test_quality_warnings_clean_case():
 def test_quality_warning_uses_mean_date_of_composite():
     before = {**_meta("2023-01-01T00:00:00Z"), "scenes": [{"datetime": "2023-01-01T00:00:00Z"},
                                                           {"datetime": "2023-01-21T00:00:00Z"}]}
-    after = _meta("2023-03-12T00:00:00Z")   # 60 dias depois da média (11/01) → ainda sem aviso
+    after = _meta("2023-03-12T00:00:00Z")
     w = quality_warnings(valid_fraction=1, before=before, after=after, median_dndvi=0,
                          after_start="2023-03-01", after_end="2023-03-31")
     assert w == []
@@ -121,19 +121,16 @@ def test_mask_hatch_only_on_masked_pixels(tmp_path):
     save_mask_hatch(masked, str(tmp_path / "m.png"))
     alpha = np.asarray(Image.open(tmp_path / "m.png"))[..., 3]
     assert (alpha[6:] == 0).all()
-    assert set(np.unique(alpha[:6])) == {60, 190}    # linhas da hachura e fundo translúcido
+    assert set(np.unique(alpha[:6])) == {60, 190}
 
 
 # ------------------------------------------------ ordem das candidatas
 def test_candidates_ordered_by_clear_fraction_with_tie_tolerance():
     from app.models.sentinel import Candidate, order_by_clear_fraction
     cand = lambda name, frac: Candidate(name, None, None, frac)  # noqa: E731
-    # posição 0 = mais próxima do evento
     evaluated = [(0, cand("09/02", 0.9948)), (1, cand("14/02", 0.9998)), (2, cand("24/02", 0.8944)),
                  (3, cand("01/03", 1.0)), (4, cand("11/03 (eo:cloud_cover 24%)", 1.0))]
     order = [c.item for c in order_by_clear_fraction(evaluated)]
-    # 09/02 está a menos de 1 p.p. da melhor → empate → vence por ser a mais próxima do evento
     assert order == ["09/02", "14/02", "01/03", "11/03 (eo:cloud_cover 24%)", "24/02"]
-    # sem empate: a mais limpa vem primeiro, mesmo mais distante
     evaluated = [(0, cand("perto", 0.60)), (1, cand("longe", 0.97))]
     assert [c.item for c in order_by_clear_fraction(evaluated)] == ["longe", "perto"]

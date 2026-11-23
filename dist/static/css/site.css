@@ -1,4 +1,4 @@
-/* SismoS2 — base, layout e componentes. Carregado depois de tokens.css e style.css (widgets). */
+/* SismoS2 — base, layout e componentes */
 
 /* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -22,7 +22,6 @@ code { font-size: .9em; background: var(--navy-700); padding: 1px 6px; border-ra
 .small { font-size: var(--fs-sm); }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-/* foco visível em todo controle */
 :focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--r-ctrl); }
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { box-shadow: var(--focus); }
 
@@ -238,7 +237,6 @@ details[open] > summary { color: var(--ink); }
 body.app-mode { height: 100vh; overflow: hidden; }
 body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 
-/* resultado */
 .result-head { padding: var(--s4) var(--s5) 0; border-bottom: 1px solid var(--navy-600); background: var(--navy-900); }
 .result-title { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s5); align-items: flex-start; justify-content: space-between; }
 .result-title h1 { font-size: var(--fs-xl); }
@@ -255,7 +253,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--s5); align-items: start; }
 .panel-grid .wide { grid-column: 1 / -1; }
 
-/* painel flutuante do mapa */
 .float-panel { position: absolute; z-index: 1001; top: var(--s4); left: 60px; width: 320px; max-height: calc(100% - 32px);
   display: flex; flex-direction: column; background: rgba(16, 34, 58, .96); border: 1px solid var(--navy-600);
   border-radius: var(--r-panel); box-shadow: var(--shadow-float); }
@@ -270,7 +267,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .fp-section + .fp-section { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--navy-600); }
 .fp-section > h3 { font-size: var(--fs-xs); color: var(--ink-muted); font-weight: 600; margin-bottom: var(--s2); }
 
-/* tela de processamento */
 .processing { max-width: 620px; margin: var(--s8) auto; padding: 0 var(--s5); display: grid; gap: var(--s4); }
 .processing h1 { font-size: var(--fs-2xl); }
 .processing .progress { height: 10px; }
@@ -282,7 +278,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .proc-steps li.now { color: var(--ink); font-weight: 600; }
 .proc-steps li.now::before { border-color: var(--red); background: var(--red-soft); }
 
-/* assistente de nova análise */
 .wizard { flex: 1; min-height: 0; display: grid; grid-template-columns: 400px 1fr; }
 .wizard-side { display: flex; flex-direction: column; min-height: 0; background: var(--navy-800); border-right: 1px solid var(--navy-600); }
 .wizard-progress { padding: var(--s4) var(--s5); border-bottom: 1px solid var(--navy-600); }
@@ -309,7 +304,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .search-results li:last-child button { border-bottom: 0; }
 .search-results button:hover { background: #1e3a60; }
 
-/* eventos */
 .events { flex: 1; min-height: 0; display: grid; grid-template-columns: 420px 1fr; }
 .events-side { overflow-y: auto; background: var(--navy-800); border-right: 1px solid var(--navy-600); padding: var(--s5); }
 .events-side h1 { font-size: var(--fs-xl); }
@@ -344,7 +338,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .article figure img { background: #fff; border-radius: var(--r-ctrl); border: 1px solid var(--navy-600); }
 .article figcaption { color: var(--ink-muted); font-size: var(--fs-sm); margin-top: var(--s2); }
 .article .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
-.fill-in { background: var(--warn-bg); color: #fde7b5; border: 1px dashed rgba(242, 184, 75, .6); border-radius: 6px; padding: 0 8px; }
 
 /* ---------- responsivo ---------- */
 @media (max-width: 1080px) {
@@ -368,7 +361,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
   .steps, .cases { grid-template-columns: 1fr; }
   .site-footer .container { grid-template-columns: 1fr; }
   .page-head h1 { font-size: var(--fs-2xl); }
-  /* telas de mapa: mapa em cima, painel embaixo, rolando a página */
   body.app-mode { height: auto; overflow: auto; }
   body.app-mode main { overflow: visible; }
   .wizard, .events { grid-template-columns: 1fr; grid-template-rows: 46vh auto; }
@@ -409,7 +401,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
   .val-form-card { position: static; }
 }
 
-/* cabeçalho do resultado mais compacto: o mapa precisa da altura */
 .result-head { padding-top: var(--s3); }
 .result-title h1 { font-size: var(--fs-lg); }
 .result-head .kpis { margin: var(--s3) 0; gap: var(--s2); }
@@ -493,8 +484,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .tech { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s4) var(--s5); }
 .tech h3 { font-size: var(--fs-sm); color: var(--ink); margin-bottom: 4px; }
 .tech p { margin: 0; font-size: var(--fs-sm); }
-.review.fill { font-size: var(--fs-md); gap: 12px var(--s5); }
-.fill-in { color: var(--warn); border-bottom: 1px dashed var(--warn); }
 .about-cta { display: flex; gap: var(--s3); justify-content: flex-end; margin-top: var(--s6); }
 @media (max-width: 1080px) { .article-layout { grid-template-columns: 1fr; } .toc { position: static; } }
 @media (max-width: 760px) {
@@ -506,7 +495,7 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 /* ---------- galeria: destaque e erro ---------- */
 .a-card { position: relative; }
 .a-link { color: inherit; text-decoration: none; }
-.a-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }   /* o card todo é clicável */
+.a-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .a-link:focus-visible { box-shadow: none; }
 .a-card:has(.a-link:focus-visible) { box-shadow: var(--focus); }
 .star { position: absolute; top: 10px; right: 10px; z-index: 2; width: 36px; height: 36px; display: grid; place-items: center;
@@ -582,7 +571,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .cmp-key { display: inline-flex; gap: var(--s3); font-size: var(--fs-xs); }
 .cmp-key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 
-/* sismograma: rótulos em HTML (não distorcem com o SVG esticado) */
 .seismo-wrap { position: relative; margin-top: var(--s7); }
 .seismo-wrap .seismogram { margin-top: 0; }
 .seismo-label { position: absolute; bottom: 6px; font-size: var(--fs-sm); font-weight: 600; color: var(--ink-muted); }
@@ -610,7 +598,6 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
   mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); }
 .tabs.more-left.more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
   mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent); }
-/* as colunas da validação não podem crescer com tabelas largas: a rolagem fica dentro de .table-scroll */
 .val-layout.has-results { grid-template-columns: minmax(0, 1fr); }
 .val-results > *, .val-results .card, .panel-grid > * { min-width: 0; }
 @media (max-width: 1080px) { .val-layout { grid-template-columns: minmax(0, 1fr); } }
@@ -627,7 +614,7 @@ body.app-mode main { display: flex; flex-direction: column; overflow: hidden; }
 .change-share .hint { margin: 0; font-size: var(--fs-sm); }
 @media (max-width: 760px) { .change-share { grid-template-columns: 1fr; } }
 
-/* celular: o painel de camadas fica na base do mapa (acima da atribuição) e não cobre o zoom no canto de cima */
+/* celular: o painel de camadas fica na base do mapa */
 @media (max-width: 760px) {
   .float-panel { position: absolute; top: auto; left: var(--s3); right: var(--s3); bottom: 26px; width: auto;
     max-height: 62%; margin: 0; display: flex; flex-direction: column; }

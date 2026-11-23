@@ -1,4 +1,4 @@
-// Áreas de controle: roda a análise em anos sem terremoto e compara evento × controles.
+// Áreas de controle
 (function () {
   const $ = (id) => document.getElementById(id);
   const id = window.ANALYSIS_ID;
@@ -41,7 +41,6 @@
         return;
       }
       if (c.status === "none") { renderYearChoices(c.default_years || []); return; }
-      // lista de controles com o andamento de cada um
       $("ctl-progress").hidden = false;
       const statusById = {};
       ((c.comparison && c.comparison.controls_status) || []).forEach((s) => { statusById[s.id] = s; });
@@ -115,7 +114,7 @@
       const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Não foi possível salvar.");
-      poll(); // recalcula a comparação com o novo conjunto de controles
+      poll();
     } catch (e) {
       errEl.textContent = e.message;
       errEl.hidden = false;

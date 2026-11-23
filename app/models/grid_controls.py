@@ -1,16 +1,4 @@
-"""Model: evento × controles na avaliação por quadrícula — o sinal é do terremoto ou do lugar?
-
-Se a grade do EVENTO ordena as células danificadas melhor que a grade de um ano SEM terremoto
-(mesmas células, mesma referência de dano), o sinal vem do terremoto. Se um controle tem AUC parecida,
-o sistema está "acertando" por características fixas do lugar (lavouras, encostas, cidade densa
-que muda todo ano), e não pelo dano.
-
-Comparação justa:
-  * mesmas células: só pixels válidos no evento E em todos os controles (interseção);
-  * mesma referência (prédios do OSM com o grau de dano do evento, variante (a));
-  * diferença de AUC pareada: teste de DeLong (variâncias e covariância das duas AUCs nas mesmas
-    células) e, para conferir, bootstrap pareado das células.
-"""
+"""Model: evento × controles na avaliação por quadrícula — o sinal é do terremoto ou do lugar?"""
 from __future__ import annotations
 
 import math
@@ -81,11 +69,7 @@ PRIMARY = {"size": "200", "against": "média dos controles"}
 
 
 def holm(pvalues: List[Optional[float]]) -> List[Optional[float]]:
-    """Correção de Holm–Bonferroni (controla a chance de QUALQUER falso positivo na família).
-
-    Ordena os p de forma crescente; o i-ésimo (i = 0…m−1) vira min(1, max_{j≤i} (m − j)·p_(j)).
-    p ausentes (None) ficam de fora da família e continuam None.
-    """
+    """Correção de Holm–Bonferroni (controla a chance de QUALQUER falso positivo na família)."""
     idx = [i for i, p in enumerate(pvalues) if p is not None]
     m = len(idx)
     out: List[Optional[float]] = [None] * len(pvalues)
@@ -97,8 +81,7 @@ def holm(pvalues: List[Optional[float]]) -> List[Optional[float]]:
 
 
 def apply_holm(result: dict) -> dict:
-    """Marca a comparação principal (evento × média, 200 m: p sem correção) e aplica Holm às demais
-    comparações deste local (todos os tamanhos × cada controle e × a média em 50/100 m)."""
+    """Marca a comparação principal (evento × média, 200 m: p sem correção) e aplica Holm às demais comparações deste local (todos os tamanhos × cada controle e × a média em 50/100 m)."""
     family = []
     for size, block in result["sizes"].items():
         if "error" in block:
@@ -133,11 +116,7 @@ def _auc_ci(score, positive, n_boot=1000, seed=0):
 
 def compare_grid(layers: List[dict], in_area: np.ndarray, unit_rows, unit_cols, unit_labels, unit_is_osm,
                  res_m: float, sizes=CELL_SIZES_M, n_boot: int = 1000, water=None) -> dict:
-    """layers[0] = evento; layers[1:] = controles. Cada camada: {label, classes, magnitude, year?}.
-
-    Para cada tamanho de célula: AUC (IC 95%) e triagem de cada análise nas MESMAS células, média dos
-    controles e DeLong/bootstrap pareado evento − cada controle. Também devolve a ROC (para o gráfico).
-    """
+    """layers[0] = evento; layers[1:] = controles."""
     common_valid = np.ones(in_area.shape, bool)
     changed = []
     for layer in layers:
@@ -175,7 +154,6 @@ def compare_grid(layers: List[dict], in_area: np.ndarray, unit_rows, unit_cols, 
                 "auc_sd": round(float(np.std([c["auc"] for c in ctl], ddof=1)), 4) if len(ctl) > 1 else None,
                 "triage": [round(float(np.mean([c["triage"][i]["share_of_damaged"] for c in ctl])), 4)
                            for i in range(len(ctl[0]["triage"]))]}
-            # evento contra a MÉDIA dos controles (score médio por célula), também pareado
             mean_score = np.mean(scores[1:], axis=0)
             block["controls_mean"]["vs_event_delong"] = delong_paired(positive, scores[0], mean_score)
         out["sizes"][str(size)] = block
@@ -209,8 +187,7 @@ def f1_at(change, positive, threshold: float) -> dict:
 
 
 def cross_calibration(source: Dict[str, dict], target: Dict[str, dict]) -> Dict[str, dict]:
-    """source/target: {tamanho: {"change": [...], "damaged": [...]}}. Escolhe o limiar de melhor F1 no
-    caso de origem e aplica no de destino; compara com o melhor F1 possível no próprio destino."""
+    """source/target: {tamanho: {"change": [...], "damaged": [...]}}."""
     out = {}
     for size in sorted(set(source) & set(target), key=int):
         s_ch, s_pos = np.array(source[size]["change"]), np.array(source[size]["damaged"], bool)

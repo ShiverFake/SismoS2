@@ -45,7 +45,6 @@ def start_validation(analysis_id: str):
         return _bad("Tolerância inválida.")
     if not 0 <= buffer_m <= 50:
         return _bad("A tolerância deve ficar entre 0 e 50 m.")
-    # tratamento do "Possibly damaged": excluir (padrão) | dano | sem_dano  (include_possible=true → dano)
     possible = str(data.get("possible_mode") or "").strip()
     if not possible:
         legacy = str(data.get("include_possible", "")).lower() in ("1", "true", "on", "sim")

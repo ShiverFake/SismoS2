@@ -13,8 +13,8 @@ from app.models.validation import (build_point_units, build_units, evaluate_vari
                                    labels_for, link_diagnostics, match_reference)
 
 AREA = box(-1, -1, 1, 1)
-CASA = box(0, 0, 0.0001, 0.0001)            # ~11 m × 11 m
-LONGE = box(0.01, 0.01, 0.0101, 0.0101)     # outro prédio, ~1,5 km dali
+CASA = box(0, 0, 0.0001, 0.0001)
+LONGE = box(0.01, 0.01, 0.0101, 0.0101)
 
 
 def _ref(*feats):
@@ -33,21 +33,21 @@ def test_labels_three_variants():
 
 def test_two_points_on_same_building_osm_mode_merges_point_mode_keeps():
     ref = _ref((Point(0.00003, 0.00005), "destroyed"), (Point(0.00007, 0.00005), "damaged"),
-               (Point(0.005, 0.005), "possibly"))                                    # sem prédio a 10 m
+               (Point(0.005, 0.005), "possibly"))
     assignment = match_reference(ref, [CASA, LONGE])
     assert assignment == [[0], [0], []]
     osm, info = build_units(ref, [CASA, LONGE], AREA, assignment)
-    assert sorted(osm.grade.tolist()) == ["destroyed", "none", "possibly"]           # o "damaged" sumiu (fundido)
+    assert sorted(osm.grade.tolist()) == ["destroyed", "none", "possibly"]
     pts = build_point_units(ref, [CASA, LONGE], AREA, assignment)
-    assert sorted(pts.grade.tolist()) == ["damaged", "destroyed", "none", "possibly"]  # todos os pontos entram
+    assert sorted(pts.grade.tolist()) == ["damaged", "destroyed", "none", "possibly"]
     assert sorted(pts.ref_index.tolist()) == [-1, 0, 1, 2]
-    assert pts.origin[pts.ref_index == -1].tolist() == ["osm"]                       # CASA saiu dos negativos
+    assert pts.origin[pts.ref_index == -1].tolist() == ["osm"]
 
 
 def test_link_diagnostics_reasons():
     ref = _ref((Point(0.00003, 0.00005), "destroyed"), (Point(0.00007, 0.00005), "damaged"),
-               (Point(0.0004, 0.00005), "damaged"),                                  # ~33 m da CASA: sem prédio a 10 m
-               (Point(5, 5), "destroyed"))                                           # fora da área
+               (Point(0.0004, 0.00005), "damaged"),
+               (Point(5, 5), "destroyed"))
     assignment = match_reference(ref, [CASA])
     diag = link_diagnostics(ref, [CASA], assignment, AREA, pixel_ok=np.array([True, True, False, True]))
     d, k = diag["destroyed"], diag["damaged"]
@@ -69,5 +69,5 @@ def test_evaluate_variant_recall_by_class_and_metrics():
     c = evaluate_variant(detected, grades, ok, "sem_dano")
     assert (c["tp"], c["fn"], c["fp"], c["tn"]) == (1, 1, 2, 1)
     assert a["recall_by_class"]["destroyed"]["rate"] == 1.0 and a["recall_by_class"]["damaged"]["rate"] == 0.0
-    assert a["recall_by_class"]["possibly"] == c["recall_by_class"]["possibly"]       # não depende da variante
+    assert a["recall_by_class"]["possibly"] == c["recall_by_class"]["possibly"]
     assert a["false_alarm_rate"] == 0.5

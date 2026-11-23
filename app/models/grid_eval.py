@@ -1,18 +1,4 @@
-"""Model: avaliação por quadrícula (grade regular em metros) — a escala em que equipes de campo atuam.
-
-Por que: a 10 m, o sinal de um prédio "vaza" para os vizinhos (efeito de vizinhança), então avaliar
-prédio a prédio penaliza o método por algo que ele não consegue resolver. Agregando em células de
-50–200 m, pergunta-se: "o sistema aponta os quarteirões mais atingidos?"
-
-A grade usa os próprios pixels da análise (~10 m no terreno): uma célula de 100 m = bloco de 10×10
-pixels, sempre alinhada ao mapa de mudança. Para cada célula:
-  * % de dano (referência): prédios Destroyed+Damaged / prédios rotulados (variante (a): "possivelmente"
-    fica fora do numerador e do denominador);
-  * % de mudança (sistema): pixels válidos marcados como mudança / pixels válidos da célula;
-  * magnitude CVA média nos pixels válidos.
-Só entram células com ≥ MIN_BUILDINGS prédios do OSM, ≥ MIN_VALID_SHARE dos pixels válidos e no máximo
-50% de água (SCL 6 ou WorldCover 80, ver water.py).
-"""
+"""Model: avaliação por quadrícula (grade regular em metros) — a escala em que equipes de campo atuam."""
 from __future__ import annotations
 
 import math
@@ -31,8 +17,8 @@ CELL_SIZES_M = (50, 100, 200)
 DEFAULT_CELL_M = 100
 MIN_BUILDINGS = 3
 MIN_VALID_SHARE = 0.5
-DAMAGED_CELL_SHARE = 0.20       # célula "danificada" pela referência: ≥ 20% dos prédios com dano
-DEFAULT_SYSTEM_THRESHOLD = 0.10  # o sistema "aponta" a célula se ≥ 10% dos pixels mudaram
+DAMAGED_CELL_SHARE = 0.20
+DEFAULT_SYSTEM_THRESHOLD = 0.10
 TRIAGE_FRACTIONS = (0.10, 0.20, 0.30)
 
 
@@ -46,7 +32,7 @@ def area_mask(area, transform, shape) -> np.ndarray:
 def build_cells(cell_px: int, in_area: np.ndarray, valid: np.ndarray, changed: np.ndarray,
                 magnitude: np.ndarray, unit_rows: np.ndarray, unit_cols: np.ndarray,
                 unit_labels: np.ndarray, unit_is_osm: np.ndarray, water: np.ndarray = None) -> Dict[str, np.ndarray]:
-    """Agrega pixels e prédios por célula de cell_px × cell_px pixels. Devolve arrays por célula."""
+    """Agrega pixels e prédios por célula de cell_px × cell_px pixels."""
     h, w = in_area.shape
     ncols = math.ceil(w / cell_px)
     rr, cc = np.indices((h, w))
@@ -82,8 +68,7 @@ def build_cells(cell_px: int, in_area: np.ndarray, valid: np.ndarray, changed: n
 
 # ------------------------------------------------------------------- métricas
 def auc_score(scores: np.ndarray, positive: np.ndarray) -> Optional[float]:
-    """AUC = probabilidade de uma célula danificada ter pontuação maior que uma não danificada
-    (Mann-Whitney; empates contam meio)."""
+    """AUC = probabilidade de uma célula danificada ter pontuação maior que uma não danificada (Mann-Whitney; empates contam meio)."""
     pos, neg = scores[positive], scores[~positive]
     if not pos.size or not neg.size:
         return None
@@ -97,7 +82,7 @@ def roc_curve(scores: np.ndarray, positive: np.ndarray, max_points: int = 60) ->
     order = np.argsort(-scores, kind="mergesort")
     s, p = scores[order], positive[order]
     tps, fps = np.cumsum(p), np.cumsum(~p)
-    last = np.r_[np.flatnonzero(np.diff(s)), len(s) - 1]          # um ponto por limiar distinto
+    last = np.r_[np.flatnonzero(np.diff(s)), len(s) - 1]
     tpr, fpr = tps[last] / max(p.sum(), 1), fps[last] / max((~p).sum(), 1)
     pts = np.column_stack([np.r_[0, fpr], np.r_[0, tpr]])
     if len(pts) > max_points:
@@ -106,14 +91,8 @@ def roc_curve(scores: np.ndarray, positive: np.ndarray, max_points: int = 60) ->
 
 
 def expected_capture(change: np.ndarray, n_damaged: np.ndarray, k: float) -> float:
-    """Prédios com dano esperados nas k células de maior % de mudança.
-
-    Células EMPATADAS na pontuação não têm ordem definida: se o corte cai no meio de um grupo empatado,
-    conta-se a fração proporcional dos prédios com dano do grupo (= valor esperado de um sorteio entre
-    elas). Sem isso, o desempate pela posição na grade distorce o resultado quando há muitas células
-    com 0% de mudança.
-    """
-    values, inverse = np.unique(-change, return_inverse=True)   # grupos em ordem decrescente de mudança
+    """Prédios com dano esperados nas k células de maior % de mudança."""
+    values, inverse = np.unique(-change, return_inverse=True)
     sizes = np.bincount(inverse)
     dmg = np.bincount(inverse, weights=n_damaged)
     got, left = 0.0, float(k)
@@ -127,8 +106,7 @@ def expected_capture(change: np.ndarray, n_damaged: np.ndarray, k: float) -> flo
 
 
 def triage_curve(change: np.ndarray, n_damaged: np.ndarray, steps: int = 50) -> Dict[str, list]:
-    """Visitando as células em ordem decrescente de % de mudança: fração dos prédios com dano alcançados.
-    Também o 'oráculo' (ordem pela própria % de dano — o máximo possível) e a linha aleatória (diagonal)."""
+    """Visitando as células em ordem decrescente de % de mudança: fração dos prédios com dano alcançados."""
     total = max(int(n_damaged.sum()), 1)
     n = len(change)
     by_oracle = np.cumsum(np.sort(n_damaged)[::-1]) / total

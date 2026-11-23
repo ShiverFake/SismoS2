@@ -1,5 +1,4 @@
-// Página "Nova análise": assistente em 4 etapas (área, datas, opções, revisar) com o mapa ao lado.
-// Envia o mesmo JSON de antes para POST /api/analises e leva para /analise/<id>, que mostra o progresso.
+// Página "Nova análise"
 (function () {
   const $ = (id) => document.getElementById(id);
   const qs = new URLSearchParams(window.location.search);
@@ -127,7 +126,7 @@
         b.textContent = it.display_name;
         b.addEventListener("click", () => {
           const lat = Number(it.lat), lon = Number(it.lon);
-          const dLat = 0.036, dLon = 0.036 / Math.cos(lat * Math.PI / 180);   // ~8 km
+          const dLat = 0.036, dLon = 0.036 / Math.cos(lat * Math.PI / 180);
           const bounds = L.latLngBounds([lat - dLat, lon - dLon], [lat + dLat, lon + dLon]);
           setRect(bounds, true);
           writeBbox(bounds);
@@ -152,7 +151,7 @@
   function minusOneYear(iso) {
     if (!iso) return "";
     const [y, m, d] = iso.split("-").map(Number);
-    const day = m === 2 && d === 29 ? 28 : d;   // 29/02 não existe no ano anterior
+    const day = m === 2 && d === 29 ? 28 : d;
     return `${y - 1}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
   function syncAnniversary() {
@@ -237,7 +236,7 @@
   $("prev-btn").addEventListener("click", () => go(step - 1));
   document.querySelectorAll("#wizard-steps li").forEach((li) => li.addEventListener("click", () => {
     const k = Number(li.dataset.step);
-    for (let i = 1; i < k; i++) if (check(i)) return;   // só pula para frente se as etapas anteriores estão completas
+    for (let i = 1; i < k; i++) if (check(i)) return;
     go(k);
   }));
 
@@ -296,7 +295,6 @@
   });
 
   // ------------------------------------------------------------------ pré-preenchimento
-  // vindo da página Eventos: ?nome=&bbox=&before_start=…&ems=&aoi=
   if (qs.get("bbox")) {
     const b = qs.get("bbox").split(",").map(Number);
     if (b.length === 4 && b.every(Number.isFinite)) {
@@ -309,7 +307,6 @@
     linkEms(qs.get("ems"), qs.get("aoi"));
     dateWarnings();
   }
-  // vindo de "Refazer" na página de resultado: ?refazer=<id>[&aniversario=1]
   const redo = qs.get("refazer");
   if (redo) {
     fetch(`/api/analises/${encodeURIComponent(redo)}`).then((r) => r.json()).then((a) => {
@@ -330,7 +327,7 @@
       const bounds = SismoS2.bboxToBounds(a.bbox);
       setRect(bounds, true);
       writeBbox(bounds);
-      go(4);   // tudo preenchido: vai direto para a revisão
+      go(4);
     });
   }
 })();

@@ -224,14 +224,14 @@
   <script>window.SISMOS2_STATIC = { base: "./" };</script>
   <script src="static/js/common.js"></script>
   <script>
-    (function () {   // menu do celular
+    (function () {
       const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
       t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
     })();
   </script>
   
 <script>
-  (function () {   // comparador antes/depois: arrastar a divisória (mouse, toque) ou setas do teclado
+  (function () {
     const box = document.getElementById("cmp");
     if (!box) return;
     const range = document.getElementById("cmp-range");

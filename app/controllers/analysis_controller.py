@@ -105,7 +105,6 @@ def _validate(data: dict) -> dict:
     if event_id and preset is None:
         event_id = None
 
-    # ativação do Copernicus EMS vinculada (vem da página Eventos ou do exemplo escolhido)
     ems_activation = str(data.get("ems_activation") or "").strip().upper() or (preset.ems_activation if preset else None)
     ems_aoi = data.get("ems_aoi") or (preset.ems_aoi if preset else None)
     if ems_activation:
@@ -125,7 +124,6 @@ def _validate(data: dict) -> dict:
         after_start=as_.isoformat(), after_end=ae.isoformat(),
         max_cloud=max_cloud, threshold_method=method, k=k, min_region_px=min_region,
         median_composite=str(data.get("median_composite", "")).lower() in ("1", "true", "on", "sim"),
-        # correção topográfica: ligada por padrão (só desliga se vier explicitamente falso)
         topo_correction=str(data.get("topo_correction", "true")).lower() not in ("0", "false", "off", "nao", "não"),
         event_id=event_id, ems_activation=ems_activation, ems_aoi=ems_aoi,
     )
@@ -188,7 +186,6 @@ def delete_analysis(analysis_id: str):
     if analysis.status in ("pending", "processing"):
         return jsonify(error="Aguarde o fim do processamento para excluir."), 409
     repo = _repo()
-    # desfaz o vínculo evento ↔ controle, para nenhum lado apontar para uma análise apagada
     if analysis.control_of:
         event = repo.get(analysis.control_of)
         if event:
@@ -225,7 +222,7 @@ def get_pixel(analysis_id: str):
 
 @api_bp.get("/analises/<analysis_id>/prioridade")
 def get_priority(analysis_id: str):
-    """Ranking das células de 200 m pela % de mudança (não precisa de referência de dano). Com cache."""
+    """Ranking das células de 200 m pela % de mudança (não precisa de referência de dano)."""
     repo = _repo()
     analysis = repo.get(analysis_id)
     if analysis is None:
@@ -241,7 +238,6 @@ def get_priority(analysis_id: str):
     if os.path.exists(cache):
         with open(cache, encoding="utf-8") as fh:
             data = json.load(fh)
-        # o cache vale enquanto a análise e a máscara de água não mudarem
         has_water = os.path.exists(os.path.join(folder, WATER_FILE))
         if (data.get("finished_at") == analysis.finished_at and data.get("water_version") == WATER_VERSION
                 and data.get("water_known", False) == has_water

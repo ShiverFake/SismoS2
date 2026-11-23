@@ -1,4 +1,4 @@
-// Página de resultado: abas (com teclado e #âncora), painel flutuante do mapa e etapas do processamento.
+// Página de resultado
 (function () {
   const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
   const panels = [...document.querySelectorAll(".tab-panel")];
@@ -15,14 +15,14 @@
     if (focus) tab.focus();
     tab.scrollIntoView({ block: "nearest", inline: "nearest" });
     if (key === "mapa" && window.SismoS2 && SismoS2.map) {
-      setTimeout(() => SismoS2.map.invalidateSize(), 0);   // o mapa estava escondido: recalcula o tamanho
+      setTimeout(() => SismoS2.map.invalidateSize(), 0);
     }
     if (history.replaceState) history.replaceState(null, "", key === "mapa" ? location.pathname : `#${key}`);
   }
 
   tabs.forEach((t, i) => {
     t.addEventListener("click", () => select(t.dataset.tab));
-    t.addEventListener("keydown", (e) => {   // setas, Home e End entre as abas
+    t.addEventListener("keydown", (e) => {
       const keys = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 };
       if (!(e.key in keys)) return;
       e.preventDefault();
@@ -30,12 +30,10 @@
     });
   });
   document.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => select(b.dataset.goto, true)));
-  // links como "Mostrar na aba Mapa" levam de volta ao mapa
   ["val-grid-toggle", "val-layer-toggle", "ctl-layer-toggle"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", (e) => { if (e.target.checked) setTimeout(() => select("mapa"), 250); });
   });
-  // no celular as abas rolam para o lado: um degradê na borda avisa que há mais abas
   const strip = document.querySelector(".result-head .tabs");
   if (strip) {
     const edges = () => {
@@ -50,7 +48,6 @@
   const initial = location.hash.slice(1);
   if (initial && tabs.some((t) => t.dataset.tab === initial)) setTimeout(() => select(initial), 0);
 
-  // painel flutuante recolhível
   const fp = document.getElementById("float-panel"), fpBtn = document.getElementById("fp-toggle");
   if (fp && fpBtn) {
     const narrow = window.matchMedia("(max-width: 760px)").matches;
@@ -63,7 +60,6 @@
     fpBtn.addEventListener("click", () => setOpen(fp.classList.contains("collapsed")));
   }
 
-  // etapas da tela de processamento acompanham a barra de progresso
   window.SismoS2 = window.SismoS2 || {};
   SismoS2.updateProcSteps = (progress) => {
     const items = [...document.querySelectorAll("#proc-steps li")];

@@ -49,8 +49,6 @@ def test_choose_pair_prefers_target_gap_and_valid_area():
     d = [date(2021, 1, 10), date(2021, 1, 25), date(2021, 1, 30), date(2021, 3, 10)]
     clears = [_clear(1.0), _clear(0.70), _clear(0.95), _clear(1.0)]
     best = choose_control_pair(d, clears, target_gap_days=15)
-    # (10/01, 30/01): 20 dias, 95% → 0,95 − 0,05 = 0,90 vence (10/01, 25/01): 15 dias, 70% → 0,70
-    # e vence (10/01, 10/03): 59 dias, 100% → 1 − 0,44 = 0,56
     assert (best["before"], best["after"], best["gap_days"]) == (0, 2, 20)
     assert best["common_valid"] == pytest.approx(0.95)
 
@@ -59,7 +57,7 @@ def test_choose_pair_uses_intersection_of_clear_masks():
     a = np.array([True, True, False, False]); b = np.array([False, False, True, True])
     c = np.array([True, True, True, False])
     best = choose_control_pair([date(2021, 1, 1), date(2021, 1, 16), date(2021, 1, 17)], [a, b, c], 15)
-    assert (best["before"], best["after"]) == (0, 2)      # a∩b = 0%; a∩c = 50%
+    assert (best["before"], best["after"]) == (0, 2)
 
 
 def test_choose_pair_needs_two_dates():
@@ -70,7 +68,7 @@ def test_choose_pair_needs_two_dates():
 def test_mean_std_z():
     r = mean_std_z(5.0, [1.0, 2.0, 3.0])
     assert r["controls_mean"] == 2.0 and r["controls_std"] == 1.0 and r["z"] == 3.0
-    assert mean_std_z(5.0, [2.0])["z"] is None            # 1 controle: sem desvio, sem z
+    assert mean_std_z(5.0, [2.0])["z"] is None
 
 
 def _layer(label, magnitude, threshold, invalid=None):
@@ -83,34 +81,29 @@ def _layer(label, magnitude, threshold, invalid=None):
 
 
 def test_common_threshold_reclassifies_everyone_and_uses_common_area():
-    # 1 linha × 10 pixels; os 5 primeiros são urbanos
     urban = np.array([[True] * 5 + [False] * 5])
-    # evento: limiar próprio alto (0,30) porque a imagem toda mudou bastante
     ev = _layer("Evento", [[0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.40]], 0.30)
     c1 = _layer("C1", [[0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.15]], 0.10)
     c2 = _layer("C2", [[0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.25, 0.05]], 0.20, invalid=(0, 8))
-    s = multi_control_stats(ev, [c1, c2], urban, pixel_area_m2=1e6, min_region_px=1)   # pixel de 1 km²
-    assert s["common_threshold"] == pytest.approx(0.15)              # média dos limiares dos controles
-    assert s["common_valid_km2"] == pytest.approx(9.0)    # pixel 8 inválido no C2 sai da área comum
+    s = multi_control_stats(ev, [c1, c2], urban, pixel_area_m2=1e6, min_region_px=1)
+    assert s["common_threshold"] == pytest.approx(0.15)
+    assert s["common_valid_km2"] == pytest.approx(9.0)
     ev_row = s["event"]
-    # limiar próprio: só o pixel 9 (0,40) mudou → 1/9; limiar comum 0,15: pixels 0,1,2 e 9 → 4/9
     assert ev_row["own_total_percent"] == pytest.approx(100 / 9, abs=0.01)
     assert ev_row["common_total_percent"] == pytest.approx(400 / 9, abs=0.01)
     assert ev_row["own_urban_percent"] == 0.0 and ev_row["common_urban_percent"] == 60.0
-    # evento reclassificado com o limiar do C1 (0,10) e do C2 (0,20)
     assert s["controls"][0]["event_at_this_threshold_urban_percent"] == 60.0
     assert s["controls"][1]["event_at_this_threshold_urban_percent"] == 60.0
-    # magnitude urbana do evento: 0,25 0,25 0,25 0,05 0,05
     assert ev_row["urban_magnitude"]["median"] == pytest.approx(0.25)
     assert s["aggregates"]["common_urban_percent"]["controls_mean"] == 0.0
-    assert s["aggregates"]["common_urban_percent"]["z"] is None      # desvio 0 → sem z
+    assert s["aggregates"]["common_urban_percent"]["z"] is None
 
 
 def test_min_region_filter_applies_to_common_threshold():
     ev = _layer("Evento", [[0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], 1.0)
     c1 = _layer("C1", [[0.0] * 8], 0.2)
     s = multi_control_stats(ev, [c1], None, 100.0, min_region_px=2)
-    assert s["event"]["common_total_percent"] == 0.0                 # pixel isolado é ruído
+    assert s["event"]["common_total_percent"] == 0.0
 
 
 # ------------------------------------------------- referência OSM/HOT (destruídos)

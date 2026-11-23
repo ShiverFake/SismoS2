@@ -1,15 +1,4 @@
-"""Model: áreas de controle — a mesma análise repetida em anos sem terremoto.
-
-Ideia: tudo o que "muda" num ano de controle é mudança normal (estação, lavouras, obras,
-sombras, ruído). Comparando o evento com VÁRIOS anos normais dá para dizer se ele está fora
-da variação natural (escore z), em vez de comparar com um único ano que pode ser atípico.
-
-Dois cuidados:
-* Limiar comum: cada análise tem o seu limiar μ + kσ, que por construção marca ~3% de qualquer
-  imagem. Para comparar, todas são reclassificadas com o MESMO limiar — o nível de ruído dos
-  anos normais (média dos limiares dos controles).
-* Área comum: só entram os pixels válidos (sem nuvem) no evento E em todos os controles.
-"""
+"""Model: áreas de controle — a mesma análise repetida em anos sem terremoto."""
 from __future__ import annotations
 
 import json
@@ -27,11 +16,11 @@ from app.models.change_detection import CHANGE_CLASS_IDS, NODATA, remove_small_r
 from app.models.quality import anniversary_dates
 
 COMPARISON_FILE = "control_comparison.json"
-COMPARISON_VERSION = 4   # muda quando o cálculo muda → o cache antigo é refeito
+COMPARISON_VERSION = 4
 OVERLAP_PNG = "control_overlap.png"
-OVERLAP_COLOR = (34, 211, 238, 235)   # ciano: mudou no evento E em pelo menos um ano de controle
-CONTROL_MAX_CLOUD = 80                # no controle decide a área limpa no retângulo, não a nuvem do tile
-DAY_PENALTY = 0.01                    # 1 ponto percentual de área válida "vale" 1 dia de diferença no intervalo
+OVERLAP_COLOR = (34, 211, 238, 235)
+CONTROL_MAX_CLOUD = 80
+DAY_PENALTY = 0.01
 
 
 # ------------------------------------------------------------ criar controles
@@ -49,14 +38,12 @@ def shift_to_year(iso: str, year: int) -> str:
     d = date.fromisoformat(iso)
     try:
         return d.replace(year=year).isoformat()
-    except ValueError:  # 29/02
+    except ValueError:
         return d.replace(year=year, day=28).isoformat()
 
 
 def build_year_control(event: Analysis, year: int, min_valid: float = 0.0) -> Analysis:
-    """Controle de um ano: procura o melhor par de cenas na mesma janela do calendário do evento
-    (do início do período 'antes' ao fim do período 'depois'; em Antakya, 1/jan a 15/mar),
-    no mesmo tile e de preferência na mesma órbita."""
+    """Controle de um ano: procura o melhor par de cenas na mesma janela do calendário do evento (do início do período 'antes' ao fim do período 'depois'; em Antakya, 1/jan a 15/mar), no mesmo tile e de preferência na mesma órbita."""
     r = event.result or {}
     window = {"start": shift_to_year(event.before_start, year), "end": shift_to_year(event.after_end, year),
               "target_gap_days": event_gap_days(event),
@@ -64,7 +51,6 @@ def build_year_control(event: Analysis, year: int, min_valid: float = 0.0) -> An
     return Analysis.new(
         name=f"{event.name} – controle {year}",
         bbox=list(event.bbox),
-        # datas provisórias = janela inteira; o processamento troca pelas datas do par escolhido
         before_start=window["start"], before_end=window["end"],
         after_start=window["start"], after_end=window["end"],
         max_cloud=CONTROL_MAX_CLOUD, threshold_method=event.threshold_method, k=event.k,
@@ -77,7 +63,7 @@ def build_year_control(event: Analysis, year: int, min_valid: float = 0.0) -> An
 
 def build_control(event: Analysis) -> Analysis:
     """Controle simples (versão anterior): os dois períodos deslocados 1 ano para trás."""
-    before = anniversary_dates(event.before_start, event.before_end)   # devolve as datas −1 ano
+    before = anniversary_dates(event.before_start, event.before_end)
     after = anniversary_dates(event.after_start, event.after_end)
     return Analysis.new(
         name=f"{event.name} – controle (ano anterior)",
@@ -94,13 +80,7 @@ def build_control(event: Analysis) -> Analysis:
 
 def choose_control_pair(dates: Sequence[date], clears: Sequence[np.ndarray], target_gap_days: int,
                         day_penalty: float = DAY_PENALTY, min_common_valid: float = 0.0) -> Optional[dict]:
-    """Escolhe o par (antes, depois) com intervalo mais parecido com o do evento e mais área válida.
-
-    pontuação = fração do retângulo válida nas DUAS cenas − day_penalty × |intervalo − alvo|
-    Ex.: alvo 15 dias; par de 15 dias com 70% válido (0,70) perde para par de 20 dias com 95%
-    (0,95 − 0,05 = 0,90), mas um par de 60 dias com 100% (1 − 0,45 = 0,55) perde para os dois.
-    Pares com área válida nas duas datas abaixo de `min_common_valid` não entram (None = nenhum par válido).
-    """
+    """Escolhe o par (antes, depois) com intervalo mais parecido com o do evento e mais área válida."""
     best = None
     order = sorted(range(len(dates)), key=lambda i: dates[i])
     for i, j in combinations(order, 2):
@@ -119,12 +99,7 @@ def choose_control_pair(dates: Sequence[date], clears: Sequence[np.ndarray], tar
 
 def run_control_series(event: Analysis, run_year, target: int, start_year: int, min_year: int,
                        existing_ok_years=()) -> dict:
-    """Roda controles ano a ano, para trás, até ter `target` controles válidos.
-
-    run_year(ano) cria, processa e devolve a análise de controle daquele ano (status "done" ou "error",
-    com o motivo em .error). Anos que falham (sem par com área válida suficiente, sem cenas L2A…) ficam
-    registrados e o próximo ano disponível para trás é tentado.
-    """
+    """Roda controles ano a ano, para trás, até ter `target` controles válidos."""
     ok_years = sorted(set(existing_ok_years), reverse=True)
     tried = []
     for year in range(start_year, min_year - 1, -1):
@@ -165,12 +140,7 @@ def mean_std_z(event_value: float, control_values: List[float]) -> dict:
 
 def multi_control_stats(event: dict, controls: List[dict], urban: Optional[np.ndarray],
                         pixel_area_m2: float, min_region_px: int) -> dict:
-    """Compara o evento com N controles. Cada camada: {label, classes, magnitude, threshold}.
-
-    Devolve por análise: % de mudança com o limiar próprio e com o limiar comum (total e urbana),
-    o evento reclassificado com o limiar de cada controle e a distribuição da magnitude na área
-    urbana comum; e os agregados (média ± desvio dos controles, z do evento).
-    """
+    """Compara o evento com N controles."""
     common = event["classes"] != NODATA
     for c in controls:
         common &= c["classes"] != NODATA
@@ -203,7 +173,6 @@ def multi_control_stats(event: dict, controls: List[dict], urban: Optional[np.nd
     for c in controls:
         row, own = measures(c)
         any_ctl |= own
-        # evento reclassificado com o limiar DESTE controle (ruído daquele ano normal)
         ev_at = above(event, c["threshold"])
         row["event_at_this_threshold_total_percent"] = _pct(int(ev_at.sum()), n_common)
         if urban_common is not None:
@@ -297,11 +266,7 @@ def noise_median(layer: dict, urban: Optional[np.ndarray]) -> Optional[float]:
 
 
 def compare_controls(repo: AnalysisRepository, event: Analysis, controls: List[Analysis]) -> dict:
-    """Comparação evento × controles concluídos (com cache) e camada 'mudou no evento e em algum controle'.
-
-    Todos os controles concluídos recebem os sinais de alerta; só os NÃO excluídos entram na
-    média, no desvio, no z, no limiar comum e na área comum.
-    """
+    """Comparação evento × controles concluídos (com cache) e camada 'mudou no evento e em algum controle'."""
     done = [c for c in controls if c.status == "done"]
     if not done:
         raise ValueError("Nenhum controle concluído ainda.")
@@ -324,7 +289,6 @@ def compare_controls(repo: AnalysisRepository, event: Analysis, controls: List[A
         npz = np.load(npz_path)
         urban = npz["urban"] if "urban" in npz.files else None
 
-    # sinais de alerta de cada controle (comparando o ruído dele com o das outras análises)
     noise = {"event": noise_median(ev, urban), **{cid: noise_median(l, urban) for cid, l in layers.items()}}
     status = []
     for c in done:
@@ -352,19 +316,14 @@ def compare_controls(repo: AnalysisRepository, event: Analysis, controls: List[A
 
 
 # ------------------------------------------------------- controle suspeito
-FLAG_TILE_CLOUD = 50.0     # % de nuvem no tile inteiro (eo:cloud_cover) em alguma das cenas
-FLAG_MIN_VALID = 0.60      # fração do retângulo válida nas duas datas
-FLAG_NOISE_RATIO = 1.5     # magnitude mediana > 1,5 × a mediana das outras análises
+FLAG_TILE_CLOUD = 50.0
+FLAG_MIN_VALID = 0.60
+FLAG_NOISE_RATIO = 1.5
 
 
 def control_flags(cloud_before: Optional[float], cloud_after: Optional[float], valid_fraction: Optional[float],
                   noise: Optional[float], others_noise: List[float]) -> List[dict]:
-    """Sinais de que um controle pode não representar um "ano normal" (só alerta; não exclui sozinho).
-
-    Um ano sem terremoto deveria ser "quieto". Muita nuvem no tile (névoa fina que passa pela SCL),
-    pouca área válida ou um nível de ruído muito acima das outras análises indicam problema
-    atmosférico ou de iluminação — e inflam o desvio dos controles, escondendo o sinal do evento.
-    """
+    """Sinais de que um controle pode não representar um "ano normal" (só alerta; não exclui sozinho)."""
     flags = []
     clouds = [c for c in (cloud_before, cloud_after) if c is not None]
     if clouds and max(clouds) > FLAG_TILE_CLOUD:

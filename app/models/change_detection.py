@@ -1,16 +1,4 @@
-"""Model: algoritmos de detecção de mudanças (somente NumPy/SciPy, independente da web).
-
-Pipeline
-1. Normalização radiométrica relativa: as bandas da imagem "antes" são ajustadas
-   (média/desvio) às da imagem "depois" usando só os pixels válidos, reduzindo
-   diferenças de iluminação, atmosfera e estação.
-2. Change Vector Analysis (CVA): magnitude do vetor diferença nas 6 bandas
-   (B02, B03, B04, B08, B11, B12).
-3. Limiar automático na magnitude: média + k·desvio  ou  Otsu.
-4. Limpeza: remove regiões com menos de N pixels (ruído "sal e pimenta").
-5. Classificação dos pixels alterados com diferenças de índices espectrais:
-   dNDVI (vegetação), dNDWI (água), dBSI/dNDBI (solo exposto/entulho).
-"""
+"""Model: algoritmos de detecção de mudanças (somente NumPy/SciPy, independente da web)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,22 +24,22 @@ BANDS = ("blue", "green", "red", "nir", "swir16", "swir22")
 
 @dataclass
 class ChangeParams:
-    threshold_method: str = "kstd"   # "kstd" ou "otsu"
-    k: float = 2.0                   # usado em "kstd"
-    min_region_px: int = 6           # tamanho mínimo de uma região de mudança
+    threshold_method: str = "kstd"
+    k: float = 2.0
+    min_region_px: int = 6
     normalize: bool = True
-    ndvi_drop: float = 0.15          # queda de NDVI para "perda de vegetação"
+    ndvi_drop: float = 0.15
     ndwi_change: float = 0.15
     bsi_increase: float = 0.05
 
 
 @dataclass
 class ChangeResult:
-    classes: np.ndarray          # uint8, 255 = sem dado/nuvem
-    changed: np.ndarray          # bool
-    magnitude: np.ndarray        # float32 (NaN fora da máscara)
+    classes: np.ndarray
+    changed: np.ndarray
+    magnitude: np.ndarray
     threshold: float
-    dndvi: np.ndarray            # float32
+    dndvi: np.ndarray
     indices_before: Dict[str, np.ndarray]
     indices_after: Dict[str, np.ndarray]
     valid: np.ndarray
@@ -111,9 +99,6 @@ def otsu_threshold(values: np.ndarray, bins: int = 256) -> float:
     m0 = s0 / np.maximum(w0, 1)
     m1 = (s0[-1] - s0) / np.maximum(w1, 1)
     between = w0 * w1 * (m0 - m1) ** 2
-    # Em distribuições bem separadas a variância entre classes forma um "platô" sobre o
-    # intervalo vazio entre os picos (qualquer corte ali é ótimo). Usa o centro do platô
-    # em vez da primeira posição, para o limiar não ficar colado em uma das classes.
     first = int(np.argmax(between))
     is_max = between >= between[first] * (1 - 1e-9)
     last = first
@@ -143,9 +128,7 @@ def remove_small_regions(mask: np.ndarray, min_pixels: int) -> np.ndarray:
 def detect_changes(before: Dict[str, np.ndarray], after: Dict[str, np.ndarray],
                    valid: np.ndarray, params: ChangeParams | None = None,
                    urban: Optional[np.ndarray] = None) -> ChangeResult:
-    """urban: área construída (WorldCover classe 50). Se informada, o aumento de solo exposto só
-    vira "possível dano em construções" (classe 2) dentro dela; fora, vira "possível deslizamento"
-    (classe 5). Sem ela (WorldCover indisponível), todo solo exposto fica na classe 2."""
+    """urban: área construída (WorldCover classe 50)."""
     params = params or ChangeParams()
     if int(valid.sum()) < 100:
         raise ValueError(

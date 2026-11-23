@@ -22,7 +22,7 @@ def test_confusion_metrics_known_values():
     assert m["precision"] == pytest.approx(0.8)
     assert m["recall"] == pytest.approx(20 / 30, abs=1e-4)
     assert m["overall_accuracy"] == pytest.approx(0.7)
-    assert m["kappa"] == pytest.approx(0.4)          # po=0,7  pe=0,5
+    assert m["kappa"] == pytest.approx(0.4)
     assert m["f1"] == pytest.approx(2 * 0.8 * (2 / 3) / (0.8 + 2 / 3), abs=1e-4)
 
 
@@ -47,19 +47,19 @@ def test_labels_for_possible_option():
 
 
 def test_build_units_links_points_to_buildings():
-    b1 = box(0, 0, 0.0001, 0.0001)                  # ~11 m de lado
+    b1 = box(0, 0, 0.0001, 0.0001)
     b2 = box(0.001, 0, 0.0011, 0.0001)
     ref = ReferenceData("teste", [
-        ReferenceFeature(Point(0.00005, 0.00005), "damaged"),    # dentro de b1
-        ReferenceFeature(Point(0.00006, 0.00005), "destroyed"),  # também b1 → fica o pior
-        ReferenceFeature(Point(0.005, 0.005), "damaged"),        # sem prédio → unidade pontual
+        ReferenceFeature(Point(0.00005, 0.00005), "damaged"),
+        ReferenceFeature(Point(0.00006, 0.00005), "destroyed"),
+        ReferenceFeature(Point(0.005, 0.005), "damaged"),
     ], aoi=box(-1, -1, 1, 1))
     units, info = build_units(ref, [b1, b2], box(-1, -1, 1, 1))
     assert len(units) == 3
     assert units.grade.tolist() == ["destroyed", "none", "damaged"]
     assert units.origin.tolist() == ["osm", "osm", "referencia"]
     assert info["matched_to_osm"] == 2 and info["unmatched_added_as_points"] == 1
-    assert 5 < units.radius_m[0] < 8   # raio equivalente de ~11×11 m
+    assert 5 < units.radius_m[0] < 8
 
 
 def test_detect_units_uses_radius_plus_buffer():
@@ -67,7 +67,7 @@ def test_detect_units_uses_radius_plus_buffer():
     pred[10, 10] = True
     rows, cols = np.array([10, 10, 10]), np.array([10, 12, 20])
     det = detect_units(pred, rows, cols, radius_m=np.array([0.0, 5.0, 0.0]), buffer_m=10.0, res_m=10.0)
-    assert det.tolist() == [True, False, False]   # 20 m > 5+10 ; 100 m > 10
+    assert det.tolist() == [True, False, False]
     det = detect_units(pred, rows, cols, radius_m=np.array([0.0, 10.0, 0.0]), buffer_m=10.0, res_m=10.0)
     assert det.tolist() == [True, True, False]
 

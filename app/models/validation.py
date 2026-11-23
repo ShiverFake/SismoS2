@@ -1,16 +1,4 @@
-"""Model: validação do mapa de mudanças contra dados oficiais de dano (avaliação por edificação).
-
-Unidade de avaliação = edificação
-  * População de prédios: edificações do OpenStreetMap dentro da área avaliada (AOI) pelo produtor
-    da referência (ex.: Copernicus EMS) ∩ área da análise.
-  * Cada feição da referência (ponto/polígono com grau de dano) é ligada ao prédio do OSM que a
-    contém ou ao mais próximo a até 10 m; feições sem prédio no OSM entram como prédios pontuais.
-  * Verdade: positivo = Destruído ou Danificado (opcionalmente também "Possivelmente danificado");
-    negativo = prédio sem registro de dano; "possivelmente" fica fora da avaliação por padrão.
-  * Previsão: o prédio é "detectado" se há pixel de mudança a uma distância do seu centro menor ou
-    igual a (raio equivalente do prédio + tolerância de posição).
-  * Métricas: matriz de confusão, precisão, recall (sensibilidade), F1, exatidão global e kappa de Cohen.
-"""
+"""Model: validação do mapa de mudanças contra dados oficiais de dano (avaliação por edificação)."""
 from __future__ import annotations
 
 import csv
@@ -75,9 +63,9 @@ class Units:
     lon: np.ndarray
     lat: np.ndarray
     radius_m: np.ndarray
-    grade: np.ndarray        # str: destroyed | damaged | possibly | none
-    origin: np.ndarray       # str: osm | referencia
-    ref_index: Optional[np.ndarray] = None   # índice da feição da referência (−1 = prédio do OSM)
+    grade: np.ndarray
+    origin: np.ndarray
+    ref_index: Optional[np.ndarray] = None
 
     def __len__(self) -> int:
         return len(self.lon)
@@ -94,11 +82,7 @@ def _equivalent_radius_m(poly) -> float:
 
 
 def match_reference(ref: ReferenceData, buildings: List, tol_m: float = MATCH_TOLERANCE_M) -> List[List[int]]:
-    """Para cada feição da referência, os prédios do OSM ligados a ela.
-
-    Ponto: o prédio mais próximo a até `tol_m` (lista vazia = nenhum prédio perto).
-    Polígono: todos os prédios que ele toca.
-    """
+    """Para cada feição da referência, os prédios do OSM ligados a ela."""
     tol_deg = tol_m / 111_320
     tree = shapely.STRtree(buildings) if buildings else None
     out = []
@@ -119,8 +103,7 @@ def _worse(a: str, b: str) -> str:
 
 def build_units(ref: ReferenceData, buildings: List, area,
                 assignment: Optional[List[List[int]]] = None) -> Tuple[Units, dict]:
-    """Modo "prédio OSM": cada prédio do OSM é uma unidade, com o grau mais grave dos pontos ligados a ele;
-    feições sem prédio a até 10 m entram como unidades pontuais."""
+    """Modo "prédio OSM": cada prédio do OSM é uma unidade, com o grau mais grave dos pontos ligados a ele; feições sem prédio a até 10 m entram como unidades pontuais."""
     assignment = assignment if assignment is not None else match_reference(ref, buildings)
     grades = ["none"] * len(buildings)
     extra, matched = [], 0
@@ -153,9 +136,7 @@ def build_units(ref: ReferenceData, buildings: List, area,
 
 def build_point_units(ref: ReferenceData, buildings: List, area,
                       assignment: Optional[List[List[int]]] = None) -> Units:
-    """Modo "ponto do GRA": cada feição da referência é uma unidade própria (sem fundir pontos no mesmo
-    prédio e sem depender do OSM); o mapa de mudança é amostrado num buffer em volta do ponto.
-    Negativos = prédios do OSM que nenhuma feição da referência alcança (a até 10 m)."""
+    """Modo "ponto do GRA": cada feição da referência é uma unidade própria (sem fundir pontos no mesmo prédio e sem depender do OSM); o mapa de mudança é amostrado num buffer em volta do ponto."""
     assignment = assignment if assignment is not None else match_reference(ref, buildings)
     used = {i for idx in assignment for i in idx}
     lon, lat, radius, grade, origin, ref_idx = [], [], [], [], [], []
@@ -179,17 +160,11 @@ DIST_BUCKETS = ((20, "10–20 m"), (50, "20–50 m"), (100, "50–100 m"), (floa
 
 def link_diagnostics(ref: ReferenceData, buildings: List, assignment: List[List[int]], area,
                      pixel_ok: np.ndarray) -> dict:
-    """Por classe do GRA: quantas feições ligaram a um prédio do OSM, quantas não tinham prédio a ≤ 10 m
-    (e a que distância está o prédio mais próximo), quantas foram fundidas num prédio que já tinha outra
-    feição, e quantas caíram fora da área comum ou em pixel inválido.
-
-    pixel_ok[j]: a feição j está dentro da grade e num pixel válido (sem nuvem nas duas datas).
-    """
+    """Por classe do GRA: quantas feições ligaram a um prédio do OSM, quantas não tinham prédio a ≤ 10 m (e a que distância está o prédio mais próximo), quantas foram fundidas num prédio que já tinha outra feição, e quantas caíram fora da área comum ou em pixel inválido."""
     per_building: Dict[int, List[int]] = {}
     for j, idx in enumerate(assignment):
         for i in idx:
             per_building.setdefault(i, []).append(j)
-    # numa casa com vários pontos, só um "representa" o prédio (o de grau mais grave); os outros são fundidos
     absorbed = set()
     for js in per_building.values():
         if len(js) > 1:
@@ -247,11 +222,7 @@ def locate(units: Units, transform: Affine, shape: Tuple[int, int]) -> Tuple[np.
 
 
 def labels_for(grades: np.ndarray, possible="excluir") -> np.ndarray:
-    """1 = dano, 0 = sem dano, −1 = fora da avaliação.
-
-    possible: o que fazer com "Possibly damaged" — "excluir" (padrão), "dano" ou "sem_dano".
-    (True/False ainda são aceitos: True = "dano", False = "excluir".)
-    """
+    """1 = dano, 0 = sem dano, −1 = fora da avaliação."""
     if possible is True:
         possible = "dano"
     elif possible is False or possible is None:
@@ -285,7 +256,7 @@ def evaluate_variant(detected: np.ndarray, grades: np.ndarray, pixel_ok: np.ndar
 def detect_units(pred: np.ndarray, rows, cols, radius_m, buffer_m: float, res_m: float) -> np.ndarray:
     if not pred.any() or not len(rows):
         return np.zeros(len(rows), bool)
-    dist_px = ndimage.distance_transform_edt(~pred)   # distância até o pixel de mudança mais próximo
+    dist_px = ndimage.distance_transform_edt(~pred)
     return dist_px[rows, cols] * res_m <= radius_m + buffer_m
 
 
@@ -298,7 +269,7 @@ class ValidationService:
         self.repository = repository
         self.reference_dir = reference_dir
         self.overpass_url = overpass_url
-        self.ems = ems   # EmsRepository (Copernicus EMS); None = só arquivo enviado
+        self.ems = ems
 
     # --- persistência do estado da validação (arquivo próprio, ao lado da análise)
     def path(self, analysis_id: str) -> str:
@@ -383,8 +354,8 @@ class ValidationService:
         before = {b: npz[f"before_{b}"].astype(np.float32) for b in BANDS}
         after = {b: npz[f"after_{b}"].astype(np.float32) for b in BANDS}
         valid = npz["valid"]
-        water = load_water(out_dir, valid.shape)   # células com > 50% de água ficam fora da grade
-        urban = npz["urban"] if "urban" in npz.files else None   # WorldCover (análises novas)
+        water = load_water(out_dir, valid.shape)
+        urban = npz["urban"] if "urban" in npz.files else None
         transform = Affine(*result["grid"]["transform"])
         res_m = float(result["grid"]["ground_resolution_m"])
         rows, cols, inside = locate(units, transform, valid.shape)
@@ -394,7 +365,7 @@ class ValidationService:
             raise ReferenceDataError("Nenhuma edificação avaliável (todas fora da área ou sob nuvem).")
         y_true = labels[evaluable] == 1
 
-        # 4) experimentos: método de limiar × alvo
+        # 4) experimentos
         current = (analysis.threshold_method, None if analysis.threshold_method == "otsu" else float(analysis.k))
         methods = list(METHODS) + ([current] if current not in METHODS else [])
         rows_out, current_detect = [], None
@@ -417,7 +388,7 @@ class ValidationService:
                 if is_current:
                     current_detect, current_pred, current_magnitude = detected, pred, res.magnitude
 
-        # 5) análise de sensibilidade (configuração desta análise): modo de unidade × "possivelmente"
+        # 5) análise de sensibilidade
         step(90, "Análise de sensibilidade…")
         sensitivity = []
         for mode, mode_units in (("osm", units_osm), ("ponto", units_pt)):
@@ -429,7 +400,6 @@ class ValidationService:
                                     "possible_label": POSSIBLE_MODES[variant],
                                     "is_selected": mode == unit_mode and variant == possible,
                                     **evaluate_variant(det, mode_units.grade, ok, variant)})
-        # diagnóstico da ligação GRA ↔ OSM (cada feição avaliada no seu próprio pixel)
         feat_units = units_pt.subset(units_pt.ref_index >= 0) if len(units_pt) else units_pt
         pixel_ok = np.zeros(len(ref.features), bool)
         if len(feat_units):
@@ -437,7 +407,6 @@ class ValidationService:
             pixel_ok[feat_units.ref_index] = in_ & valid[r_, c_]
         diagnostics = link_diagnostics(ref, buildings, assignment, area, pixel_ok)
 
-        # intervalos de confiança (bootstrap dos prédios) e efeito de vizinhança — unidade/variante escolhidas
         step(91, "Bootstrap (1000 reamostragens) e efeito de vizinhança…")
         ok_sel = inside & valid[rows, cols]
         confidence = bootstrap_ci(current_detect[ok_sel], labels[ok_sel], units.grade[ok_sel],
@@ -447,7 +416,6 @@ class ValidationService:
         plot_neighborhood(neighborhood, os.path.join(out_dir, NEIGHBORHOOD_PNG),
                           f"{source_label(ref.source)}, unidade: {UNIT_MODES[unit_mode]}")
 
-        # avaliação por quadrícula (sempre com prédios do OSM e variante (a)), nos 3 tamanhos de célula
         step(91, "Avaliação por quadrícula (50, 100 e 200 m)…")
         grid_threshold = float(spec.get("grid_threshold", DEFAULT_SYSTEM_THRESHOLD))
         in_area = area_mask(area, transform, valid.shape)
@@ -466,12 +434,10 @@ class ValidationService:
             if "error" not in gm:
                 plot_grid(cells, gm, os.path.join(out_dir, GRID_FILES[size][1]),
                           f"{source_label(ref.source)}, células de {size} m ({gm['n_cells']} células)")
-            # pontuação de cada célula, para a calibração cruzada com outro caso
             gm["cells_scores"] = {"change": [round(float(x), 5) for x in cells["change_share"]],
                                   "damaged": [bool(x) for x in cells["damage_share"] >= DAMAGED_CELL_SHARE]}
             grid_out[str(size)] = gm
 
-        # evento × controles (anos sem terremoto) nas MESMAS células e com a MESMA referência
         grid_controls = None
         controls = [c for c in find_controls(self.repository, analysis)
                     if c.status == "done" and not c.control_excluded]
@@ -498,7 +464,6 @@ class ValidationService:
         best = max(rows_out, key=lambda r: (r["f1"], r["kappa"]))
         current_row = next(r for r in rows_out if r["is_current"])
         prevalence = float(y_true.mean())
-        # mesma matriz só com os prédios em área construída (WorldCover classe 50)
         urban_block = None
         npz_urban = npz["urban"] if "urban" in npz.files else None
         if npz_urban is not None:
@@ -537,9 +502,8 @@ class ValidationService:
             "source_label": source_label(ref.source),
             "source_short": source_label(ref.source, short=True),
             "reference_counts": counts,
-            "reference_raw_values": ref.raw_values,          # valores originais de damage_gra
+            "reference_raw_values": ref.raw_values,
             "evaluated_area": ref.area_breakdown,
-            # de onde vêm os prédios "sem dano": da própria referência ou do OSM (não registrados nela)
             "negatives_source": ("referência" if counts["none"] else "OpenStreetMap (prédios sem registro na referência)"),
             "negatives_by_origin": {
                 "osm_sem_registro": int((evaluable & (labels == 0) & (units.origin == "osm")).sum()),

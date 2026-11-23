@@ -33,7 +33,7 @@ class _Item:
 def test_latest_processing_keeps_newest_version_per_date():
     items = [_Item("A_0", 11, "02.13", "2020-01-11"), _Item("A_1", 11, "05.00", "2023-06-16"),
              _Item("B_0", 16, "02.13", "2020-01-16"),
-             _Item("C_0", 11, "02.13", "2020-01-11", tile="37SBA")]        # outro tile: não é duplicata
+             _Item("C_0", 11, "02.13", "2020-01-11", tile="37SBA")]
     kept = sorted(i.id for i in latest_processing(items))
     assert kept == ["A_1", "B_0", "C_0"]
 
@@ -46,14 +46,14 @@ class _FakeRepo(SentinelRepository):
 
     def _read_asset(self, item, key, grid, resampling):
         if key == "scl":
-            return np.full((grid.height, grid.width), 4, np.uint8)       # tudo vegetação (limpo)
+            return np.full((grid.height, grid.width), 4, np.uint8)
         return np.full((grid.height, grid.width), self.aot_dn[item.id], np.uint16)
 
 
 def test_hazy_scene_is_discarded_and_aot_recorded():
     grid = Grid.from_bbox((0, 0, 0.01, 0.01))
     items = [_Item("limpa", 1, "05.09", "x"), _Item("nevoa", 2, "05.09", "x")]
-    repo = _FakeRepo({"limpa": 120, "nevoa": 350}, max_aot=0.25)            # AOT 0,12 e 0,35
+    repo = _FakeRepo({"limpa": 120, "nevoa": 350}, max_aot=0.25)
     ranked = repo.rank_candidates(items, grid)
     assert [c.item.id for c in ranked] == ["limpa"] and ranked[0].aot == pytest.approx(0.12)
     assert len(_FakeRepo({"limpa": 120, "nevoa": 350}, max_aot=None).rank_candidates(items, grid)) == 2
@@ -72,7 +72,7 @@ def test_delong_known_cases():
     assert d["auc_2"] == pytest.approx(auc_score(noise, y), abs=1e-4)
     assert d["diff"] > 0.15 and d["p_value"] < 0.01 and d["ci95"][0] > 0
     same = delong_paired(y, good, good)
-    assert same["diff"] == 0 and same["p_value"] is None              # variância zero: sem teste
+    assert same["diff"] == 0 and same["p_value"] is None
     b = paired_bootstrap_auc(y, good, noise, n_boot=300)
     assert b["diff_ci95"][0] > 0 and b["p_value"] < 0.05
     assert delong_paired(np.array([True, False, False]), good[:3], noise[:3]) is None
@@ -88,7 +88,7 @@ def test_best_f1_and_cross_calibration():
     dst = {"100": {"change": [0.0, 0.2, 0.25, 0.35], "damaged": [False, True, True, True]}}
     cc = cross_calibration(src, dst)["100"]
     assert cc["threshold_from_source"] == 0.3
-    assert cc["applied_to_target"]["recall"] == pytest.approx(1 / 3, abs=1e-4)   # limiar alto demais para o destino
+    assert cc["applied_to_target"]["recall"] == pytest.approx(1 / 3, abs=1e-4)
     assert cc["target_own_best"]["f1"] == 1.0
 
 
@@ -99,14 +99,13 @@ def _layer(label, change):
 
 def test_compare_grid_event_beats_random_control():
     rng = np.random.default_rng(1)
-    h = w = 100                                          # 10×10 células de 10 px (100 m)
+    h = w = 100
     dmg_cell = rng.random((10, 10)) < 0.3
-    # evento: mudança concentrada nas células danificadas; controle: mudança aleatória
     ev = np.kron(dmg_cell, np.ones((10, 10), bool)) & (rng.random((h, w)) < 0.4)
     ev |= rng.random((h, w)) < 0.03
     ct = rng.random((h, w)) < 0.08
     ctl = _layer("Controle", ct)
-    ctl["classes"][:5, :] = NODATA                       # faixa sem dado no controle → sai de todos
+    ctl["classes"][:5, :] = NODATA
     rows, cols, labels = [], [], []
     for r in range(10):
         for c in range(10):

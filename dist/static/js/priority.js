@@ -1,4 +1,4 @@
-// Camada "Prioridade de vistoria": células de 200 m ranqueadas pela % de mudança (ranking relativo).
+// Camada "Prioridade de vistoria"
 (function () {
   const $ = (id) => document.getElementById(id);
   const id = window.ANALYSIS_ID;
@@ -60,8 +60,7 @@
     }
   });
 
-  // camada padrão ao abrir o resultado: liga a prioridade assim que o mapa e os dados estiverem prontos
-  let tries = 0;   // a análise pode ainda estar processando: tenta por até ~5 min
+  let tries = 0;
   const tryShow = () => load().then(() => {
     if (!SismoS2.map) throw new Error("mapa ainda não montado");
     if (!toggle.checked) { toggle.checked = true; toggle.dispatchEvent(new Event("change")); }

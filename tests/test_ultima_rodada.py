@@ -16,7 +16,6 @@ from app.models.priority import priority_cells, priority_summary  # noqa: E402
 
 
 def test_holm_known_values():
-    # p = 0,01 0,04 0,03 0,20 (m = 4): ordenados 0,01×4=0,04; 0,03×3=0,09; 0,04×2=0,08→0,09 (monótono); 0,20×1→0,20
     assert holm([0.01, 0.04, 0.03, 0.20]) == pytest.approx([0.04, 0.09, 0.09, 0.20])
     assert holm([0.5, None, 0.9]) == [pytest.approx(1.0), None, pytest.approx(1.0)]
 
@@ -30,7 +29,7 @@ def test_apply_holm_primary_is_not_corrected():
     primary = out["sizes"]["200"]["controls_mean"]["vs_event_delong"]
     assert primary["primary"] is True and "p_holm" not in primary
     assert out["multiple_testing"]["family_size"] == 3
-    assert out["sizes"]["100"]["analyses"][1]["vs_event_delong"]["p_holm"] == pytest.approx(0.03)   # 0,01 × 3
+    assert out["sizes"]["100"]["analyses"][1]["vs_event_delong"]["p_holm"] == pytest.approx(0.03)
 
 
 def _clear(frac, n=100):
@@ -53,34 +52,32 @@ def test_series_goes_back_until_three_valid_years():
         return SimpleNamespace(id=f"c{y}", status=outcome[y], error=None if outcome[y] == "done" else f"sem par em {y}")
 
     res = run_control_series(None, run_year, target=3, start_year=2022, min_year=2017)
-    assert ran == [2022, 2021, 2020, 2019, 2018]             # para assim que completa 3
+    assert ran == [2022, 2021, 2020, 2019, 2018]
     assert res["ok_years"] == [2021, 2020, 2018] and res["complete"]
     assert [t["reason"] for t in res["tried"] if t["status"] == "error"] == ["sem par em 2022", "sem par em 2019"]
-    # anos já válidos não são refeitos; se acabar o histórico, informa que não completou
     res2 = run_control_series(None, run_year, target=3, start_year=2020, min_year=2019, existing_ok_years=[2021])
     assert res2["ok_years"] == [2021, 2020] and not res2["complete"]
 
 
 def test_priority_bands_ties_and_zero_change():
-    # 1 linha de 20 células de 1 px; mudança decrescente, com empate e células sem mudança
     change = [1, 1] + [1] * 0
     classes = np.zeros((1, 20), np.uint8)
-    classes[0, :2] = 4                     # 2 células com 100% de mudança (empatadas no topo)
-    classes[0, 2:4] = 4                    # mais 2 com 100% → 4 empatadas na posição 0
-    classes[0, 19] = NODATA                # sem dado: sai
+    classes[0, :2] = 4
+    classes[0, 2:4] = 4
+    classes[0, 19] = NODATA
     cells = priority_cells(classes, 1)
     assert len(cells["id"]) == 19
     top = cells["band"][cells["change"] > 0]
-    assert set(top) == {"top10"}           # empates ficam todos na mesma faixa (posição 0)
+    assert set(top) == {"top10"}
     assert set(cells["band"][cells["change"] == 0]) == {"rest"}
-    s = priority_summary(cells, 40000.0)   # pixel de 200 m
+    s = priority_summary(cells, 40000.0)
     assert s["bands"][0]["n_cells"] == 4 and s["top10_area_km2"] == pytest.approx(0.16)
     assert s["n_cells"] == 19
 
 
 def test_priority_ranking_order():
     classes = np.zeros((10, 100), np.uint8)
-    for k in range(10):                    # célula k (10×10 px) com k*10% de mudança
+    for k in range(10):
         classes[: k, k * 10:(k + 1) * 10] = 4
     cells = priority_cells(classes, 10)
     order = dict(zip(cells["col"].tolist(), cells["band"].tolist()))

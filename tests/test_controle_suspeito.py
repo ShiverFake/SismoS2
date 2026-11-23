@@ -84,24 +84,23 @@ def test_hazy_control_is_flagged_but_still_counted(client):
     flags = {s["id"]: [f["code"] for f in s["flags"]] for s in comp["controls_status"]}
     assert flags[clean.id] == []
     assert set(flags[hazy.id]) == {"nuvem_tile", "pouca_area", "ruido_alto"}
-    assert comp["n_included"] == 2 and comp["n_done"] == 2   # sinalizar NÃO exclui sozinho
+    assert comp["n_included"] == 2 and comp["n_done"] == 2
 
 
 def test_exclude_requires_reason_and_changes_the_mean(client):
     c, event, clean, hazy, repo = client
     before = c.get(f"/api/analises/{event.id}/controle").get_json()["comparison"]
     r = c.post(f"/api/analises/{event.id}/controle/{hazy.id}/excluir", json={"reason": ""})
-    assert r.status_code == 400                                   # motivo obrigatório
+    assert r.status_code == 400
     r = c.post(f"/api/analises/{event.id}/controle/{hazy.id}/excluir",
                json={"reason": "névoa: 63% de nuvem no tile", "flags": [{"code": "nuvem_tile"}]})
     assert r.status_code == 200 and r.get_json()["excluded"]["reason"] == "névoa: 63% de nuvem no tile"
-    saved = repo.get(hazy.id).control_excluded                     # motivo gravado na análise de controle
+    saved = repo.get(hazy.id).control_excluded
     assert saved["flags"] == ["nuvem_tile"] and saved["at"]
     after = c.get(f"/api/analises/{event.id}/controle").get_json()["comparison"]
-    assert after["n_included"] == 1 and after["n_done"] == 2       # cache refeito com o novo conjunto
+    assert after["n_included"] == 1 and after["n_done"] == 2
     assert [row["label"] for row in after["controls"]] == ["Controle 2021"]
     assert after["common_threshold"] == pytest.approx(0.12) != before["common_threshold"]
-    # a página do controle mostra que ele está fora da média
     assert c.get(f"/api/analises/{hazy.id}/controle").get_json()["excluded"]["reason"]
 
 

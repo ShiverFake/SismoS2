@@ -72,7 +72,7 @@
   {% if vitrine %}<script>window.SISMOS2_STATIC = { base: "__SISMOS2_BASE__" };</script>{% endif %}
   <script src="{{ url_for('static', filename='js/common.js') }}"></script>
   <script>
-    (function () {   // menu do celular
+    (function () {
       const t = document.getElementById("nav-toggle"), m = document.getElementById("menu");
       t.addEventListener("click", () => { const open = m.classList.toggle("open"); t.setAttribute("aria-expanded", open); });
     })();

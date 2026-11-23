@@ -1,9 +1,4 @@
-"""Fábrica da aplicação Flask (padrão MVC).
-
-- app/models      -> regras de negócio e acesso a dados (Sentinel-2, algoritmos, persistência)
-- app/views       -> templates HTML (Jinja2) + estáticos (CSS/JS com Leaflet)
-- app/controllers -> rotas Flask que ligam requisições aos models e escolhem a view
-"""
+"""Fábrica da aplicação Flask (padrão MVC)."""
 import os
 
 from flask import Flask
@@ -23,7 +18,7 @@ def create_app(config_class=Config) -> Flask:
     os.makedirs(app.config["REFERENCE_DIR"], exist_ok=True)
 
     from app.models.analysis import AnalysisRepository
-    if not app.config.get("VITRINE"):   # o build da vitrine só lê: não mexe em análises que o servidor está rodando
+    if not app.config.get("VITRINE"):
         AnalysisRepository(app.config["RESULTS_DIR"]).mark_interrupted()
 
     from app.controllers.main_controller import main_bp
@@ -36,5 +31,5 @@ def create_app(config_class=Config) -> Flask:
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(validation_bp, url_prefix="/api")
     app.register_blueprint(control_bp, url_prefix="/api")
-    app.register_blueprint(events_bp)   # /eventos (página) e /api/eventos/... (JSON)
+    app.register_blueprint(events_bp)
     return app

@@ -1,21 +1,4 @@
-"""Model: onde há construções. Usado no ranking de prioridade e na classe "possível dano em construções".
-
-As duas fontes se completam: o ESA WorldCover (classe 50, área construída) acerta cidades de concreto mas
-quase não vê vilarejos de taipa, que parecem solo exposto (no Marrocos, só 0,51% da AOI do EMSR695 é
-construída no WorldCover); o OpenStreetMap tem esses prédios quando foram mapeados. Por isso a regra é OU:
-
-- prioridade: uma célula de 200 m entra no ranking se tiver ≥ MIN_OSM_BUILDINGS prédio do OSM OU
-  ≥ MIN_BUILT_SHARE de WorldCover 50. As outras aparecem como "sem construções";
-- classificação: um pixel conta como área construída se for WorldCover 50 OU estiver dentro de um prédio
-  do OSM ou a até OSM_BUFFER_M dele (urban_mask).
-
-O arquivo buildings.npz da análise guarda a máscara do WorldCover, o pixel do centro de cada prédio do OSM e
-a pegada dos prédios ampliada em OSM_BUFFER_M. Uma fonte que faltar (WorldCover sem dado, Overpass fora do ar)
-fica de fora; sem nenhuma das duas, nada é filtrado.
-
-A regra vale só para a prioridade: a avaliação por quadrícula da validação já exige ≥ 3 prédios do OSM
-por célula e continua com as regras dela.
-"""
+"""Model: onde há construções."""
 from __future__ import annotations
 
 import logging
@@ -31,7 +14,7 @@ BUILT_UP = 50
 MIN_BUILT_SHARE = 0.10
 MIN_OSM_BUILDINGS = 1
 OSM_BUFFER_M = 10.0
-BUILDINGS_VERSION = 2   # 2: regra OU (WorldCover ou OSM) e pegada dos prédios do OSM
+BUILDINGS_VERSION = 2
 
 
 def save_buildings(folder: str, built: Optional[np.ndarray] = None, osm_rows=None, osm_cols=None,
@@ -73,8 +56,7 @@ def has_osm(b: Optional[dict]) -> bool:
 
 
 def building_cells(b: Optional[dict], cell_of_px: np.ndarray, n_cells: int, cell_px: int, ncols: int) -> Optional[np.ndarray]:
-    """Bool por célula: tem construções (≥ 1 prédio do OSM OU ≥ 10% de WorldCover 50)?
-    None quando não há nenhuma fonte (nada é filtrado)."""
+    """Bool por célula: tem construções (≥ 1 prédio do OSM OU ≥ 10% de WorldCover 50)?"""
     if not b or (b.get("built") is None and b.get("osm_rows") is None):
         return None
     ok = np.zeros(n_cells, dtype=bool)
@@ -135,7 +117,7 @@ def osm_pixels(polys, transform, shape):
 
 
 def ensure_buildings(folder: str, result: dict, cache_dir: str, overpass_url: str) -> Optional[dict]:
-    """Completa buildings.npz (WorldCover e OSM) quando falta alguma fonte. Falhas de rede não interrompem."""
+    """Completa buildings.npz (WorldCover e OSM) quando falta alguma fonte."""
     from app.models.landcover import read_worldcover
     from app.models.reference import fetch_osm_buildings
     from app.models.water import grid_from_result
@@ -154,7 +136,7 @@ def ensure_buildings(folder: str, result: dict, cache_dir: str, overpass_url: st
             log.warning("WorldCover indisponível para a prioridade: %s", exc)
     if not has_osm(b) or b.get("osm_mask") is None:
         try:
-            polys = fetch_osm_buildings(grid.bbox, cache_dir, overpass_url, retries=2)   # cache em disco
+            polys = fetch_osm_buildings(grid.bbox, cache_dir, overpass_url, retries=2)
             rows, cols = osm_pixels(polys, grid.transform, shape)
             footprint = osm_footprint_mask(polys, grid.transform, shape, grid.ground_resolution)
         except Exception as exc:  # noqa: BLE001

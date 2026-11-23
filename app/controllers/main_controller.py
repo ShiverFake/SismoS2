@@ -1,8 +1,4 @@
-"""Controller das páginas HTML (Início, Nova análise, Análises, Resultado, Metodologia, Sobre).
-
-Só monta o que cada página mostra a partir das análises salvas; toda a lógica de processamento e
-validação continua nos models e na API.
-"""
+"""Controller das páginas HTML (Início, Nova análise, Análises, Resultado, Metodologia, Sobre)."""
 from __future__ import annotations
 
 import json
@@ -54,7 +50,6 @@ def _reference_label(source: Optional[str]) -> str:
 THUMB_FILE = "thumb_priority.png"
 PRIORITY_PNG = "priority_overlay.png"
 THUMB_W = 640
-# parâmetros que o formulário antigo ("/") recebia — hoje vão para /nova
 FORM_PARAMS = ("refazer", "bbox", "nome", "ems", "aoi", "before_start", "before_end", "after_start", "after_end")
 
 
@@ -92,15 +87,14 @@ def analysis_card(repo: AnalysisRepository, a: Analysis) -> dict:
         "n_controls_total": len(controls),
         "validated": v is not None,
         "validation_source": v.get("source") if v else None,
-        "has_thumb": a.status == "done" and "transform" in (r.get("grid") or {}),   # versões antigas não têm a grade
+        "has_thumb": a.status == "done" and "transform" in (r.get("grid") or {}),
         "top10_n_cells": _cached_priority(repo, a).get("top10_n_cells"),
         "auc200": main_auc(v),
     }
 
 
 def main_auc(v: Optional[dict]) -> Optional[float]:
-    """AUC das células de 200 m mostrada no site: a do resultado principal (evento × controles, nas células
-    válidas em todos os anos); sem controles, a da avaliação por quadrícula do evento."""
+    """AUC das células de 200 m mostrada no site: a do resultado principal (evento × controles, nas células válidas em todos os anos); sem controles, a da avaliação por quadrícula do evento."""
     if not v:
         return None
     gc = (((v.get("grid_controls") or {}).get("sizes") or {}).get("200") or {})
@@ -176,9 +170,7 @@ def hero_compare(repo: AnalysisRepository, ordered: List[Analysis]) -> Optional[
 
 
 def top_level(repo: AnalysisRepository) -> List[Analysis]:
-    """Análises principais: os controles não aparecem como itens separados.
-
-    Na vitrine estática (config VITRINE) só entram as destacadas: são as únicas publicadas."""
+    """Análises principais: os controles não aparecem como itens separados."""
     vitrine = current_app.config.get("VITRINE")
     return [a for a in repo.list() if not a.control_of and (a.featured or not vitrine)]
 
@@ -186,12 +178,11 @@ def top_level(repo: AnalysisRepository) -> List[Analysis]:
 # ------------------------------------------------------------------ páginas
 @main_bp.route("/")
 def index():
-    # links antigos do formulário (/?refazer=, /?bbox=… vindos de Eventos) agora abrem /nova
     if any(k in request.args for k in FORM_PARAMS):
         return redirect(url_for("main.new_analysis", **request.args.to_dict()))
     repo = _repo()
     cases, seen = [], set()
-    ordered = sorted(top_level(repo), key=lambda a: not a.featured)   # destacadas primeiro (sort estável)
+    ordered = sorted(top_level(repo), key=lambda a: not a.featured)
     for a in ordered:
         if a.status != "done":
             continue
@@ -220,7 +211,7 @@ def new_analysis():
 def analyses():
     repo = _repo()
     cards = [analysis_card(repo, a) for a in top_level(repo)]
-    cards.sort(key=lambda c: not c["featured"])   # destacadas no topo (sort estável: mantém a data)
+    cards.sort(key=lambda c: not c["featured"])
     return render_template("analyses.html", active_page="analises", cards=cards)
 
 
@@ -231,7 +222,6 @@ def analysis_page(analysis_id: str):
     if analysis is None:
         abort(404)
     event = EarthquakeRepository().get(analysis.event_id) if analysis.event_id else None
-    # ativação do Copernicus EMS: a vinculada à análise ou, se não houver, a do exemplo usado
     ems = None
     if analysis.ems_activation:
         ems = {"code": analysis.ems_activation, "aoi": analysis.ems_aoi}
@@ -291,7 +281,7 @@ def _priority_rgba(a: Analysis, folder: str, alpha: int = 150) -> np.ndarray:
         rgb = tuple(int(colors[band][i:i + 2], 16) for i in (1, 3, 5))
         overlay[r * cell_px:(r + 1) * cell_px, c * cell_px:(c + 1) * cell_px] = (*rgb, alpha)
     grey = tuple(int(EMPTY[2][i:i + 2], 16) for i in (1, 3, 5))
-    for r, c in zip(cells["empty"]["row"], cells["empty"]["col"]):   # sem construções: cinza claro, bem transparente
+    for r, c in zip(cells["empty"]["row"], cells["empty"]["col"]):
         overlay[r * cell_px:(r + 1) * cell_px, c * cell_px:(c + 1) * cell_px] = (*grey, 46)
     return overlay
 

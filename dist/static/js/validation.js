@@ -1,4 +1,4 @@
-// Validação contra dados oficiais (Copernicus EMS / arquivo): formulário, progresso e resultados.
+// Validação contra dados oficiais
 (function () {
   const $ = (id) => document.getElementById(id);
   const id = window.ANALYSIS_ID;
@@ -85,7 +85,7 @@
 
   function render(v) {
     $("val-form").hidden = true;
-    $("validation").classList.add("has-results");   // o card do formulário some; volta em "Validar de novo"
+    $("validation").classList.add("has-results");
     $("val-results").hidden = false;
     const c = v.current;
     const ref = refLabel(v);
@@ -149,7 +149,7 @@
     if (!e.target.checked) { if (unitsLayer) SismoS2.map.removeLayer(unitsLayer); return; }
     if (!unitsLayer) {
       const gj = await fetch(fileUrl("validation_units.geojson")).then((r) => r.json());
-      const order = { tn: 0, ignored: 1, fp: 2, fn: 3, tp: 4 }; // desenha os mais importantes por cima
+      const order = { tn: 0, ignored: 1, fp: 2, fn: 3, tp: 4 };
       gj.features.sort((a, b) => order[a.properties.outcome] - order[b.properties.outcome]);
       const renderer = L.canvas({ padding: 0.3 });
       unitsLayer = L.geoJSON(gj, {
@@ -170,14 +170,14 @@
   // ---- avaliação por quadrícula
   $("val-grid-thr").addEventListener("input", (e) => { $("val-grid-thr-label").textContent = e.target.value; });
   let gridData = null, gridLayer = null;
-  const gridColor = (c) => { // rampa amarela → laranja → vermelha, saturando em 50% de mudança
+  const gridColor = (c) => {
     const t = Math.min(1, c / 0.5);
     const stops = [[254, 240, 138], [249, 115, 22], [127, 29, 29]];
     const [a, b, f] = t < 0.5 ? [stops[0], stops[1], t / 0.5] : [stops[1], stops[2], (t - 0.5) / 0.5];
     return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * f)).join(",")})`;
   };
 
-  // rótulo da referência sempre a partir da fonte real (EMS, HOT/OSM ou arquivo enviado)
+  // rótulo da referência sempre a partir da fonte real
   const esc = (t) => String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   function refLabel(v) {
     if (v.source_short) return { short: v.source_short, long: v.source_label || v.source };
@@ -187,7 +187,7 @@
     return { short: "arquivo enviado", long: v.source || "Arquivo enviado" };
   }
 
-  // 1) resultado principal: AUC por quadrícula de 200 m, evento × média dos controles, e a curva de triagem
+  // 1) resultado principal
   function renderMain(v) {
     const g = v.grid && v.grid.sizes && v.grid.sizes["200"];
     const b = v.grid_controls && v.grid_controls.sizes && v.grid_controls.sizes["200"];
@@ -268,7 +268,7 @@
       rows.map(([label, f]) => `<tr><td>${label}</td>${sizes.map((s) => `<td>${cell(g.sizes[s], f)}</td>`).join("")}</tr>`).join("") +
       `</tbody><caption>Só células com ≥ ${g.rules.min_buildings} prédios do OSM e ≥ ${100 * g.rules.min_valid_share}% dos pixels válidos.
         Triagem = % de todos os prédios com dano que estão nas células de maior % de mudança.</caption>`;
-    $("val-grid-size").value = g.sizes["200"] ? "200" : String(g.default_size);   // 200 m: a escala do resultado principal
+    $("val-grid-size").value = g.sizes["200"] ? "200" : String(g.default_size);
     showGridSize();
   }
 
@@ -305,7 +305,7 @@
     else if (gridLayer) { SismoS2.map.removeLayer(gridLayer); gridLayer = null; }
   });
 
-  // evento × controles: AUC (IC), DeLong e triagem por tamanho de célula
+  // evento × controles
   function renderGridControls(gc) {
     $("val-gc").hidden = !gc;
     if (!gc) return;
@@ -399,7 +399,7 @@
         viram uma unidade só). Passe o mouse em "Sem prédio" para ver a distância até o prédio mais próximo.</caption>`;
   }
 
-  // mesma matriz restrita aos prédios em área construída (WorldCover 50)
+  // mesma matriz restrita aos prédios em área construída
   function renderUrban(u) {
     $("val-urban").hidden = !u;
     if (!u) return;

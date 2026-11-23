@@ -45,7 +45,7 @@ class FakeWeb:
     def __init__(self):
         self.calls = []
         page2 = json.loads(fixture("ems_list_page2.json"))
-        page2["next"] = None                                   # termina a paginação na 2ª página
+        page2["next"] = None
         p1 = json.loads(fixture("ems_list_page1.json"))
         p1["next"] = LIST_URL + "?limit=3&offset=3"
         self.routes = {
@@ -89,13 +89,13 @@ def ems(tmp_path, web):
 # ------------------------------------------------------------------- EMS
 def test_list_follows_pagination_and_filters_earthquakes(ems, web):
     acts = ems.list_activations("Earthquake")
-    assert [a.code for a in acts] == ["EMSR934"]                      # página 2 da fixture real
+    assert [a.code for a in acts] == ["EMSR934"]
     a = acts[0]
     assert a.status == ("fechada" if a.closed else "aberta")
     assert a.countries == ["Panama"] and a.event_time.startswith("2026-10-09")
     assert a.centroid and len(a.centroid) == 2
-    assert len(ems.list_activations(None)) == 6                        # sem filtro: as 6 das duas páginas
-    assert sum(LIST_URL in c for c in web.calls) == 2                  # 2 páginas, uma vez só (cache)
+    assert len(ems.list_activations(None)) == 6
+    assert sum(LIST_URL in c for c in web.calls) == 2
 
 
 def test_list_cache_expires_after_one_hour(ems, web):
@@ -103,7 +103,7 @@ def test_list_cache_expires_after_one_hour(ems, web):
     ems.clock.t += 3599
     ems.list_activations()
     assert sum(LIST_URL in c for c in web.calls) == 2
-    ems.clock.t += 2                                                   # passou de 1 h
+    ems.clock.t += 2
     ems.list_activations()
     assert sum(LIST_URL in c for c in web.calls) == 4
 
@@ -136,7 +136,7 @@ def test_gra_product_downloaded_once_and_read(ems, web):
     ref = ems.read_grading("EMSR695", 7)
     assert ref.grade_counts() == {"none": 0, "possibly": 1, "damaged": 1, "destroyed": 1}
     assert ref.aoi is not None
-    ems.clock.t += 10 * 86400                                          # dias depois: produto continua no disco
+    ems.clock.t += 10 * 86400
     ems.read_grading("EMSR695", 7)
     assert sum(c.endswith("_GRA_PRODUCT_v2.zip") for c in web.calls) == 1
     gj = ems.grading_geojson("EMSR695", 7)
@@ -155,7 +155,7 @@ def test_parse_usgs_feed():
     q = quakes[0]
     assert q.magnitude >= 4.5 and q.place and q.url.startswith("https://earthquake.usgs.gov/")
     assert q.time.endswith("+00:00") and isinstance(q.depth_km, float)
-    assert all(a.time >= b.time for a, b in zip(quakes, quakes[1:]))  # mais recente primeiro
+    assert all(a.time >= b.time for a, b in zip(quakes, quakes[1:]))
 
 
 def test_usgs_feed_cached(tmp_path, web):
@@ -221,7 +221,7 @@ def test_events_page_and_apis(client):
     assert q["count"] == 5 and q["quakes"][0]["analyze_url"].startswith("/?")
     assert client.get("/api/eventos/terremotos?periodo=year").status_code == 400
     e = client.get("/api/eventos/ems").get_json()
-    assert [a["code"] for a in e["activations"]] == ["EMSR934"]       # sem detalhe na fixture → listado mesmo assim
+    assert [a["code"] for a in e["activations"]] == ["EMSR934"]
     assert e["errors"]
     d = client.get("/api/eventos/ems/EMSR695").get_json()
     aoi7 = next(a for a in d["aois"] if a["number"] == 7)

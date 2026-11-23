@@ -1,16 +1,4 @@
-"""Gera a vitrine estática do SismoS2 em dist/ (para publicar na Vercel ou em qualquer servidor de arquivos).
-
-Uso (na VM, onde estão as análises):
-    .venv/bin/python tools/build_vitrine.py                       # gera dist/
-    .venv/bin/python tools/build_vitrine.py --downloads-url https://exemplo.org/sismos2   # GeoTIFFs num link externo
-    .venv/bin/python tools/build_vitrine.py --sem-ems             # não busca a lista do Copernicus EMS
-
-O que entra: Início, Análises, Eventos, Metodologia, Sobre e a página de cada análise DESTACADA (estrela na
-galeria) e de cada controle dela. As páginas são renderizadas pelo próprio Flask (os mesmos templates), com
-VITRINE=True: sem os botões que gravam no servidor. Os dados que o JavaScript pede a /api/... viram arquivos
-.json; as imagens, GeoJSONs e JSONs das análises são copiados; os GeoTIFFs ficam de fora. Todos os links
-ficam relativos, então dist/ funciona em qualquer servidor estático, inclusive `python -m http.server`.
-"""
+"""Gera a vitrine estática do SismoS2 em dist/ (para publicar na Vercel ou em qualquer servidor de arquivos)."""
 from __future__ import annotations
 
 import argparse
@@ -78,7 +66,6 @@ def build(out: str, downloads_url: str | None, with_ems: bool) -> dict:
         analyses += [c for c in find_controls(repo, a) if c.status == "done"]
     ids = list(dict.fromkeys(a.id for a in analyses))
 
-    # pasta limpa (só apaga uma pasta chamada dist dentro do projeto, ou uma que já seja uma vitrine)
     if os.path.exists(out):
         is_dist = os.path.abspath(out).startswith(ROOT) and os.path.basename(os.path.abspath(out)) == "dist"
         if not (is_dist or os.path.exists(os.path.join(out, "index.html"))):
@@ -91,7 +78,7 @@ def build(out: str, downloads_url: str | None, with_ems: bool) -> dict:
         r = client.get(route)
         return r.status_code, r.data
 
-    # 1) dados que o JavaScript pede a /api/... → arquivos .json
+    # 1) dados que o JavaScript pede a /api/
     for aid in ids:
         for route in (f"/api/analises/{aid}", f"/api/analises/{aid}/prioridade",
                       f"/api/analises/{aid}/validacao", f"/api/analises/{aid}/controle"):
@@ -111,7 +98,6 @@ def build(out: str, downloads_url: str | None, with_ems: bool) -> dict:
             if status == 200:
                 write(os.path.join(out, "analise", aid, img), data)
 
-    # camada "Dano oficial" (Copernicus EMS) das análises ligadas a uma ativação
     for a in analyses:
         if a.ems_activation and a.ems_aoi:
             route = f"/api/eventos/ems/{a.ems_activation}/aoi/{a.ems_aoi}/grading.geojson"
@@ -119,7 +105,6 @@ def build(out: str, downloads_url: str | None, with_ems: bool) -> dict:
             if status == 200:
                 write(os.path.join(out, route.lstrip("/")), data)
 
-    # ativações de terremoto do Copernicus EMS, congeladas na hora do build (o USGS é lido ao vivo no navegador)
     ems = {"count": 0, "activations": [], "errors": [], "note": "Lista do Copernicus EMS não incluída nesta versão."}
     if with_ems:
         status, data = get("/api/eventos/ems")
@@ -130,7 +115,7 @@ def build(out: str, downloads_url: str | None, with_ems: bool) -> dict:
     ems["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     for act in ems.get("activations", []):
         for aoi in act.get("aois", []):
-            aoi.pop("analyze_url", None)     # sem "Analisar com Sentinel-2" na vitrine
+            aoi.pop("analyze_url", None)
     write(os.path.join(out, "api", "eventos", "ems.json"), json.dumps(ems, ensure_ascii=False).encode())
 
     # 2) páginas HTML com links relativos
@@ -174,7 +159,7 @@ def folder_mb(path: str) -> float:
 
 
 def optimize_pngs(out: str) -> float:
-    """Recomprime os PNGs sem perda (Pillow optimize). Devolve os MB economizados."""
+    """Recomprime os PNGs sem perda (Pillow optimize)."""
     from PIL import Image
 
     saved = 0

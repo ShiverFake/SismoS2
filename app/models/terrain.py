@@ -1,16 +1,4 @@
-"""Model: relevo (Copernicus DEM GLO-30) e correção topográfica (C-correction).
-
-Por que corrigir: numa encosta virada para o sol o pixel fica mais claro, e na encosta oposta mais
-escuro. Entre duas datas o sol muda de posição (azimute/elevação), então o brilho das encostas
-muda mesmo sem nada ter acontecido no terreno — e o CVA vê isso como "mudança".
-
-C-correction (Teillet et al., 1982):
-    cos(i) = cos(zs)·cos(s) + sin(zs)·sin(s)·cos(φs − a)        (iluminação do pixel)
-    ρ = m·cos(i) + b   (regressão por banda)   →   c = b / m
-    ρ_corrigido = ρ · (cos(zs) + c) / (cos(i) + c)
-onde zs = ângulo zenital do sol (90° − elevação), φs = azimute do sol, s = declividade e
-a = aspecto (direção para onde a encosta está virada).
-"""
+"""Model: relevo (Copernicus DEM GLO-30) e correção topográfica (C-correction)."""
 from __future__ import annotations
 
 import logging
@@ -26,10 +14,10 @@ log = logging.getLogger(__name__)
 
 DEM_COLLECTION = "cop-dem-glo-30"
 DEM_NODATA = -32767.0
-MIN_FIT_SLOPE_DEG = 5.0      # regressão só com pixels inclinados (em terreno plano cos(i) quase não varia)
+MIN_FIT_SLOPE_DEG = 5.0
 MIN_FIT_PIXELS = 500
-FACTOR_LIMITS = (0.25, 4.0)  # evita "explodir" pixels em sombra profunda (cos(i) + c ≈ 0)
-MIN_CORRELATION = 0.20       # só corrige a banda se r(cos i, ρ) ≥ 0,2
+FACTOR_LIMITS = (0.25, 4.0)
+MIN_CORRELATION = 0.20
 STEEP_SLOPE_DEG = 20.0
 
 
@@ -54,7 +42,7 @@ class TerrainRepository:
             raise TerrainUnavailable("Nenhum tile do Copernicus DEM cobre a área.")
         dem = np.full((grid.height, grid.width), np.nan, dtype=np.float32)
         with rasterio.Env(**GDAL_ENV):
-            for item in items:  # a área pode cruzar mais de um tile de 1°
+            for item in items:
                 with rasterio.open(item.assets["data"].href) as src, WarpedVRT(
                         src, crs=grid.crs, transform=grid.transform, width=grid.width, height=grid.height,
                         resampling=Resampling.bilinear, src_nodata=DEM_NODATA, nodata=DEM_NODATA) as vrt:
@@ -67,13 +55,9 @@ class TerrainRepository:
 
 
 def slope_aspect(dem: np.ndarray, resolution_m: float) -> Tuple[np.ndarray, np.ndarray]:
-    """Declividade e aspecto em radianos.
-
-    Aspecto = azimute (horário a partir do norte) da direção de descida: 0 = encosta virada para
-    o norte, 90° = leste, 180° = sul, 270° = oeste. As linhas da grade crescem para o SUL.
-    """
+    """Declividade e aspecto em radianos."""
     dz_drow, dz_dcol = np.gradient(dem.astype(np.float64), resolution_m)
-    dz_dx, dz_dn = dz_dcol, -dz_drow          # leste e norte
+    dz_dx, dz_dn = dz_dcol, -dz_drow
     slope = np.arctan(np.hypot(dz_dx, dz_dn))
     aspect = np.mod(np.arctan2(-dz_dx, -dz_dn), 2 * math.pi)
     return slope.astype(np.float32), aspect.astype(np.float32)
@@ -89,11 +73,7 @@ def illumination(slope: np.ndarray, aspect: np.ndarray, sun_azimuth_deg: float, 
 def c_correction(bands: Dict[str, np.ndarray], cos_i: np.ndarray, sun_elevation_deg: float,
                  fit_mask: np.ndarray, slope: Optional[np.ndarray] = None,
                  sample: int = 200_000, seed: int = 0) -> Tuple[Dict[str, np.ndarray], Dict[str, Optional[float]]]:
-    """Aplica a C-correction banda a banda. Devolve (bandas corrigidas, {banda: {"c", "r"}}).
-
-    fit_mask: pixels usados na regressão (limpos, sem água). Bandas em que a regressão não faz
-    sentido (inclinação m ≤ 0 ou correlação r < 0,2) ficam sem correção (c = None).
-    """
+    """Aplica a C-correction banda a banda."""
     cos_zs = math.cos(math.radians(90.0 - sun_elevation_deg))
     fit = fit_mask & np.isfinite(cos_i)
     if slope is not None:
@@ -111,13 +91,11 @@ def c_correction(bands: Dict[str, np.ndarray], cos_i: np.ndarray, sun_elevation_
     for name, rho in bands.items():
         y = rho.ravel()[idx]
         ok = np.isfinite(y)
-        if ok.sum() < MIN_FIT_PIXELS or np.std(y[ok]) < 1e-6:   # banda constante: nada a corrigir
+        if ok.sum() < MIN_FIT_PIXELS or np.std(y[ok]) < 1e-6:
             out[name], coeffs[name] = rho, {"c": None, "r": None}
             continue
         r = float(np.corrcoef(x[ok], y[ok])[0, 1])
         m, b = np.polyfit(x[ok], y[ok], 1)
-        # Sem relação clara entre brilho e iluminação, c = b/m fica instável e a "correção"
-        # só acrescenta ruído. Acontece muito no L2A, que já sai do Sen2Cor com correção de terreno.
         if m <= 1e-6 or r < MIN_CORRELATION:
             out[name], coeffs[name] = rho, {"c": None, "r": round(r, 3)}
             continue

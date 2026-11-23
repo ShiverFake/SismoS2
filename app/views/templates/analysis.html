@@ -27,7 +27,7 @@
     </div>
   </div>
 
-  {# tela de processamento (analysis.js esconde quando a análise termina) #}
+  {# tela de processamento #}
   <section id="progress-box" class="processing" {% if analysis.status == "done" %}hidden{% endif %} aria-live="polite">
     <h2>Processando a análise</h2>
     <p class="muted">Leva cerca de um minuto. Pode fechar esta página: o processamento continua no servidor.</p>
@@ -180,7 +180,7 @@
         <div class="val-results" id="val-results" hidden>
           <p class="muted small" id="val-source-info"></p>
 
-          {# 1. resultado principal: AUC 200 m evento × controles + triagem #}
+          {# 1. resultado principal #}
           <section class="card val-main" id="val-main" aria-labelledby="h-val-main">
             <div class="val-main-head">
               <div>
@@ -351,7 +351,7 @@
         ] %}{% endif %}
         {% call ui.table(["Arquivo", "O que contém", " "]) %}
           {% for fname, label, desc in files if not config.get("VITRINE") or fname in available %}
-          <tr><td><b>{{ label }}</b><br><span class="faint small">{{ fname }}</span></td><td class="muted">{{ desc }}</td>
+          <tr><td><b>{{ label }}</b></td><td class="muted">{{ desc }}</td>
             <td class="r">
               {% if config.get("VITRINE") and fname.endswith(".tif") %}
                 {% if config.get("DOWNLOADS_URL") %}

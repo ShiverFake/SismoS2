@@ -1,8 +1,4 @@
-"""Serve dist/ como a Vercel serviria: com os cabeçalhos do vercel.json e o redirecionamento para a barra final.
-
-Uso:  python tools/servir_dist.py [porta]      (padrão 8200) e abra http://localhost:8200/
-Serve só para testar a vitrine localmente, inclusive a Content-Security-Policy; não é usado em produção.
-"""
+"""Serve dist/ como a Vercel serviria: com os cabeçalhos do vercel.json e o redirecionamento para a barra final."""
 from __future__ import annotations
 
 import http.server

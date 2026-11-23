@@ -1,14 +1,4 @@
-"""Aplica a regra de área construída (WorldCover 50 OU até 10 m de um prédio do OSM) às análises já feitas.
-
-Uso (na VM):  .venv/bin/python tools/reclassificar_construcoes.py [id ...]
-
-Para cada análise concluída (controles incluídos):
-- completa buildings.npz (WorldCover, centros e pegada dos prédios do OSM);
-- move o solo exposto entre "possível dano em construções" (classe 2) e "possível deslizamento" (classe 5)
-  pela nova máscara; as outras classes e a mudança total não mudam;
-- regrava change_classes.tif, change.png e as áreas por classe em analysis.json;
-- nas análises principais, regera a prioridade, a miniatura e a camada do comparador.
-"""
+"""Aplica a regra de área construída (WorldCover 50 OU até 10 m de um prédio do OSM) às análises já feitas."""
 from __future__ import annotations
 
 import os

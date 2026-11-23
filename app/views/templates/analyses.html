@@ -91,13 +91,13 @@
 {% endblock %}
 {% block scripts %}
 <script>
-  (function () {   // filtros da galeria (no navegador; a lista é pequena)
+  (function () {
     const $ = (id) => document.getElementById(id);
     if (!$("gallery")) return;
     const cards = [...document.querySelectorAll("#gallery .a-card")];
     function apply() {
       const q = $("f-text").value.trim().toLowerCase();
-      const st = $("f-status") ? $("f-status").value : "", val = $("f-val") ? $("f-val").value : "";   // a vitrine só tem a busca
+      const st = $("f-status") ? $("f-status").value : "", val = $("f-val") ? $("f-val").value : "";
       let n = 0;
       cards.forEach((c) => {
         const show = (!q || c.dataset.name.includes(q)) && (!st || c.dataset.status === st) && (!val || c.dataset.val === val);
@@ -110,9 +110,8 @@
     ["f-text", "f-status", "f-val"].forEach((k) => $(k) && $(k).addEventListener("input", apply));
     apply();
 
-    // estrela "Destacar": grava no servidor e leva o card para o topo
     const gallery = $("gallery");
-    gallery.addEventListener("click", async (e) => {   // (na vitrine não há estrelas: o clique não acha .star)
+    gallery.addEventListener("click", async (e) => {
       const btn = e.target.closest(".star");
       if (!btn) return;
       const card = btn.closest(".a-card"), on = btn.getAttribute("aria-pressed") !== "true";

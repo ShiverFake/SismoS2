@@ -1,8 +1,4 @@
-"""Regera as camadas visuais (ΔNDVI e magnitude) das análises já concluídas.
-
-Útil depois de mudar o estilo das camadas: não baixa imagens, usa os GeoTIFFs salvos.
-Uso:  python atualizar_camadas.py
-"""
+"""Regera as camadas visuais (ΔNDVI e magnitude) das análises já concluídas."""
 from app.models.analysis import AnalysisRepository
 from app.models.processing import rerender_layers
 from config import Config

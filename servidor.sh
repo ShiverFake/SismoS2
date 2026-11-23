@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Controla o servidor web em segundo plano.
-# Uso: bash servidor.sh start | stop | restart | status | log
+# Controla o servidor web em segundo plano
 cd "$(dirname "$0")"
 PIDFILE=server.pid
 

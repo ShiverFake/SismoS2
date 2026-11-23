@@ -1,4 +1,4 @@
-// Camada "Dano oficial (Copernicus EMS)": prédios do produto de grading coloridos pelo grau de dano.
+// Camada "Dano oficial
 (function () {
   const ems = window.ANALYSIS_EMS;
   const toggle = document.getElementById("official-toggle");

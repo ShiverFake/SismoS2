@@ -1,7 +1,4 @@
-"""Model: controle de qualidade da análise (máscara de terra e avisos para o usuário).
-
-Funções puras (sem rede/disco) — fáceis de testar e de explicar no trabalho.
-"""
+"""Model: controle de qualidade da análise (máscara de terra e avisos para o usuário)."""
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -9,18 +6,14 @@ from typing import List, Optional
 
 import numpy as np
 
-MIN_VALID_FRACTION = 0.50     # abaixo disso, pouca área para concluir algo
-MAX_GAP_DAYS = 60             # acima disso, a estação do ano muda bastante
-SEASONAL_DNDVI = -0.15        # ΔNDVI mediano da área toda abaixo disso → provável efeito sazonal
+MIN_VALID_FRACTION = 0.50
+MAX_GAP_DAYS = 60
+SEASONAL_DNDVI = -0.15
 
 
 def land_mask(valid: np.ndarray, ndwi_before: np.ndarray, ndwi_after: np.ndarray,
               water_before: Optional[np.ndarray] = None, water_after: Optional[np.ndarray] = None) -> np.ndarray:
-    """Pixels válidos que NÃO são água (SCL = 6 ou NDWI > 0 em alguma das datas).
-
-    Água tem NDVI negativo e puxa a média para baixo; um rio que enche ou seca entre as datas
-    também mexe no ΔNDVI. Por isso as estatísticas de NDVI usam só pixels de terra.
-    """
+    """Pixels válidos que NÃO são água (SCL = 6 ou NDWI > 0 em alguma das datas)."""
     with np.errstate(invalid="ignore"):
         water = (np.nan_to_num(ndwi_before, nan=-1) > 0) | (np.nan_to_num(ndwi_after, nan=-1) > 0)
     for scl_water in (water_before, water_after):
@@ -61,7 +54,7 @@ def _mean_date(scene_meta: dict) -> datetime:
 
 def quality_warnings(*, valid_fraction: float, before: dict, after: dict, median_dndvi: Optional[float],
                      after_start: str, after_end: str) -> List[dict]:
-    """Avisos exibidos em amarelo no resultado. Cada aviso: {code, message, action?}."""
+    """Avisos exibidos em amarelo no resultado."""
     out = []
     if valid_fraction < MIN_VALID_FRACTION:
         out.append({"code": "area_valida",

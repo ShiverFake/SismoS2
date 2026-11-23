@@ -29,8 +29,8 @@ def test_bootstrap_ci_contains_point_estimate_and_is_reproducible():
     for k in ("precision", "recall", "f1", "kappa", "recall_destroyed", "recall_damaged", "recall_possibly"):
         m = a[k]
         assert m["lo"] <= m["value"] <= m["hi"], k
-    assert a["recall"]["n"] == 1000                    # "possibly" fora da matriz na variante (a)…
-    assert a["recall_possibly"]["n"] == 50             # …mas com recall próprio
+    assert a["recall"]["n"] == 1000
+    assert a["recall_possibly"]["n"] == 50
     assert a["recall"]["hi"] - a["recall"]["lo"] < 0.2
 
 
@@ -39,20 +39,19 @@ def test_bootstrap_perfect_detector_has_degenerate_interval():
     l = np.where(g == "none", 0, 1)
     ci = bootstrap_ci(g != "none", l, g, n_boot=200)
     assert ci["f1"] == {"value": 1.0, "lo": 1.0, "hi": 1.0, "n": 100}
-    assert ci["recall_damaged"]["value"] is None       # classe ausente
+    assert ci["recall_damaged"]["value"] is None
 
 
 def test_distance_to_nearest_destroyed_excludes_itself():
-    # ao longo do equador: 1e-4 grau ≈ 11,1 m
     lon = np.array([0.0, 0.0001, 0.0003, 0.002])
     lat = np.zeros(4)
     g = np.array(["destroyed", "destroyed", "none", "damaged"], dtype=object)
     d = distance_to_nearest_destroyed(lon, lat, g)
-    assert d[0] == pytest.approx(11.13, abs=0.1) and d[1] == pytest.approx(11.13, abs=0.1)   # o outro destruído
+    assert d[0] == pytest.approx(11.13, abs=0.1) and d[1] == pytest.approx(11.13, abs=0.1)
     assert d[2] == pytest.approx(22.26, abs=0.1)
     assert d[3] == pytest.approx(211.5, abs=0.5)
     only_one = distance_to_nearest_destroyed(lon[:1], lat[:1], g[:1])
-    assert np.isinf(only_one[0])                       # único destruído: não tem vizinho destruído
+    assert np.isinf(only_one[0])
 
 
 def test_neighborhood_table_bands_and_rates():

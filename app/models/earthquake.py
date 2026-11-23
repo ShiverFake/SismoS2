@@ -7,16 +7,15 @@ from typing import List, Optional
 class Earthquake:
     id: str
     name: str
-    date: str               # data do evento (UTC)
+    date: str
     magnitude: float
     description: str
-    bbox: tuple             # (oeste, sul, leste, norte) em graus
+    bbox: tuple
     before_start: str
     before_end: str
     after_start: str
     after_end: str
     max_cloud: int = 30
-    # Produto oficial de dano (Copernicus EMS Rapid Mapping) para validação, se houver
     ems_activation: Optional[str] = None
     ems_aoi: Optional[int] = None
 
@@ -47,7 +46,7 @@ class EarthquakeRepository:
             bbox=(-8.25, 30.95, -8.10, 31.06),
             before_start="2023-07-15", before_end="2023-09-07",
             after_start="2023-09-09", after_end="2023-10-20", max_cloud=20,
-            ems_activation="EMSR695", ems_aoi=7,   # AOI07 Talat N'Yaaqoub
+            ems_activation="EMSR695", ems_aoi=7,
         ),
         Earthquake(
             id="myanmar-kyaukse-2025",

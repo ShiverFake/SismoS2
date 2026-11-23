@@ -26,7 +26,7 @@ def _max_deg() -> float:
 
 @events_bp.get("/api/eventos/terremotos")
 def list_quakes():
-    """?periodo=week|month  ou  ?inicio=AAAA-MM-DD&fim=AAAA-MM-DD ; &mag_min=4.5"""
+    """?periodo=week|month ou ?inicio=AAAA-MM-DD&fim=AAAA-MM-DD ; &mag_min=4.5"""
     try:
         mag_min = float(request.args.get("mag_min", 4.5))
         start, end = request.args.get("inicio"), request.args.get("fim")
@@ -74,7 +74,7 @@ def list_activations():
     out, errors = [], []
     for a in acts:
         try:
-            out.append(_with_links(repo.get_activation(a.code)))   # detalhe = AOIs + produtos (cache 1 h)
+            out.append(_with_links(repo.get_activation(a.code)))
         except (HttpError, EmsError) as exc:
             errors.append(f"{a.code}: {exc}")
             out.append(_with_links(a))

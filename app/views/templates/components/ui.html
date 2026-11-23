@@ -1,4 +1,4 @@
-{# Componentes reutilizáveis do SismoS2. Uso: {% import "components/ui.html" as ui %} #}
+{# Componentes reutilizáveis do SismoS2 #}
 
 {% set ICONS = {
   "area": '<path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><rect x="8" y="8" width="8" height="8" rx="1"/>',
@@ -64,7 +64,7 @@
 </div>
 {%- endmacro %}
 
-{# tabs: lista de (chave, rótulo, contagem opcional) #}
+{# tabs: lista de #}
 {% macro tabs(items, active, label="Seções") -%}
 <div class="tabs" role="tablist" aria-label="{{ label }}">
   {% for key, text, count in items %}
